@@ -11,24 +11,25 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Initialize Firebase safely for build
-let app: any;
-let auth: any;
-let db: any;
+// Initialize Firebase safely for build and client-side without keys
+let app: any = null;
+let auth: any = null;
+let db: any = null;
 
-if (typeof window !== 'undefined' || process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-    try {
-        app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-        auth = getAuth(app);
-        db = getFirestore(app);
-    } catch (e) {
-        console.error("Firebase initialization failed", e);
+const isConfigValid = !!firebaseConfig.apiKey;
+
+if (typeof window !== 'undefined') {
+    if (isConfigValid) {
+        try {
+            app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Firebase initialization failed:", e);
+        }
+    } else {
+        console.warn("Firebase API Key is missing. Check your environment variables in Vercel.");
     }
-} else {
-    // Fallback for build phase
-    app = {};
-    auth = {};
-    db = {};
 }
 
 const googleProvider = new GoogleAuthProvider();
