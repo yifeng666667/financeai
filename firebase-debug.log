@@ -1,0 +1,66 @@
+[debug] [2026-02-28T12:32:29.357Z] ----------------------------------------------------------------------
+[debug] [2026-02-28T12:32:29.358Z] Command:       /opt/homebrew/Cellar/node/25.6.1_1/bin/node /opt/homebrew/bin/firebase deploy
+[debug] [2026-02-28T12:32:29.358Z] CLI Version:   15.8.0
+[debug] [2026-02-28T12:32:29.358Z] Platform:      darwin
+[debug] [2026-02-28T12:32:29.358Z] Node Version:  v25.6.1
+[debug] [2026-02-28T12:32:29.358Z] Time:          Sat Feb 28 2026 07:32:29 GMT-0500 (Eastern Standard Time)
+[debug] [2026-02-28T12:32:29.359Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-02-28T12:32:29.359Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-02-28T12:32:30.066Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-28T12:32:30.067Z] > authorizing via signed-in user (adamhuang6668@gmail.com)
+[debug] [2026-02-28T12:32:30.067Z] [iam] checking project global-news-analyzer-app for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebase.projects.update","firebaseauth.configs.update"]
+[debug] [2026-02-28T12:32:30.067Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:30.067Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:30.067Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/global-news-analyzer-app:testIamPermissions [none]
+[debug] [2026-02-28T12:32:30.067Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/global-news-analyzer-app:testIamPermissions  x-goog-user-project=global-news-analyzer-app
+[debug] [2026-02-28T12:32:30.067Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/global-news-analyzer-app:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebase.projects.update","firebaseauth.configs.update"]}
+[debug] [2026-02-28T12:32:30.171Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-02-28T12:32:30.171Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-02-28T12:32:30.283Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/global-news-analyzer-app:testIamPermissions 200
+[debug] [2026-02-28T12:32:30.283Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/global-news-analyzer-app:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebase.projects.update","firebaseauth.configs.update"]}
+[info] 
+[info] === Deploying to 'global-news-analyzer-app'...
+[info] 
+[info] i  deploying firestore, auth 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-02-28T12:32:30.286Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:30.286Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:30.286Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/global-news-analyzer-app/databases/(default) [none]
+[debug] [2026-02-28T12:32:30.663Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/global-news-analyzer-app/databases/(default) 200
+[debug] [2026-02-28T12:32:30.663Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/global-news-analyzer-app/databases/(default) {"name":"projects/global-news-analyzer-app/databases/(default)","uid":"c6cd55d5-ed55-431d-8d64-3f2e64819327","createTime":"2026-02-26T20:17:18.868402Z","updateTime":"2026-02-26T20:17:18.868402Z","locationId":"nam5","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-02-28T11:32:30.645011Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"s","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"IK7R8OCY/JIDMPiz0ff895ID"}
+[info] i  firestore: reading indexes from firestore.indexes.json... 
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-02-28T12:32:30.667Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:30.667Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:30.667Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app:test [none]
+[debug] [2026-02-28T12:32:30.667Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app:test [omitted]
+[debug] [2026-02-28T12:32:30.860Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app:test 200
+[debug] [2026-02-28T12:32:30.861Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app:test {}
+[info] ✔  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-02-28T12:32:30.863Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:30.863Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:30.863Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/global-news-analyzer-app/webApps pageSize=100
+[debug] [2026-02-28T12:32:31.077Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/global-news-analyzer-app/webApps 200
+[debug] [2026-02-28T12:32:31.077Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/global-news-analyzer-app/webApps {"apps":[{"name":"projects/global-news-analyzer-app/webApps/1:887171539752:web:a5ffd41821ef74bce5e61d","appId":"1:887171539752:web:a5ffd41821ef74bce5e61d","displayName":"Web Client","projectId":"global-news-analyzer-app","webId":"OGM5YjVmYjAtMGJjMS00OWFjLWI1MDEtZjEwODUxYmIzZDVh","apiKeyId":"4ced5f52-05bb-498c-8fb7-5922039f504c","state":"ACTIVE","expireTime":"1970-01-01T00:00:00Z","etag":"1_3be105cc-4292-44e8-b679-4976fe61261e"}]}
+[debug] [2026-02-28T12:32:31.078Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:31.078Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:31.078Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app/releases pageSize=10&pageToken=
+[debug] [2026-02-28T12:32:31.238Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app/releases 200
+[debug] [2026-02-28T12:32:31.238Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app/releases {"releases":[{"name":"projects/global-news-analyzer-app/releases/cloud.firestore","rulesetName":"projects/global-news-analyzer-app/rulesets/5f9646c9-8cb1-4cca-8bd7-fd1e41217311","createTime":"2026-02-26T20:17:23.746461Z","updateTime":"2026-02-26T20:17:23.746461Z"}]}
+[debug] [2026-02-28T12:32:31.238Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:31.238Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:31.238Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app/rulesets/5f9646c9-8cb1-4cca-8bd7-fd1e41217311 [none]
+[debug] [2026-02-28T12:32:31.407Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app/rulesets/5f9646c9-8cb1-4cca-8bd7-fd1e41217311 200
+[debug] [2026-02-28T12:32:31.407Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/global-news-analyzer-app/rulesets/5f9646c9-8cb1-4cca-8bd7-fd1e41217311 [omitted]
+[info] i  firestore: latest version of firestore.rules already up to date, skipping upload... 
+[info] i  firestore: deploying indexes... 
+[debug] [2026-02-28T12:32:31.408Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:31.408Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:31.408Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/global-news-analyzer-app/databases/(default)/collectionGroups/-/indexes [none]
+[debug] [2026-02-28T12:32:31.561Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/global-news-analyzer-app/databases/(default)/collectionGroups/-/indexes 200
+[debug] [2026-02-28T12:32:31.561Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/global-news-analyzer-app/databases/(default)/collectionGroups/-/indexes {}
+[debug] [2026-02-28T12:32:31.561Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:31.561Z] Checked if tokens are valid: true, expires at: 1772284143825
+[debug] [2026-02-28T12:32:31.561Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/global-news-analyzer-app/databases/(default)/collectionGroups/-/fields?filter=indexConfig.usesAncestorConfig=false OR ttlConfig:* [none]
