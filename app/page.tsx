@@ -17,20 +17,61 @@ import {
   ShieldAlert,
   Users,
   Banknote,
-  TrendingUp
+  TrendingUp,
+  ChevronRight
 } from 'lucide-react';
 
 const TradingChart = dynamic(() => import('../components/TradingChart'), { ssr: false });
 
-// Mock Sector Data
-const SECTORS = [
-  { id: 'tech', name: 'Technology', ticker: 'XLK', icon: Cpu, trend: '+1.2%', desc: 'Software, Hardware, AI' },
-  { id: 'fin', name: 'Financials', ticker: 'XLF', icon: Landmark, trend: '-0.4%', desc: 'Banks, Insurance, Real Estate' },
-  { id: 'health', name: 'Healthcare', ticker: 'XLV', icon: HeartPulse, trend: '+0.8%', desc: 'Pharma, Biotech, Devices' },
-  { id: 'energy', name: 'Energy', ticker: 'XLE', icon: Zap, trend: '+2.1%', desc: 'Oil, Gas, Consumables' },
-  { id: 'consumer', name: 'Consumer', ticker: 'XLY', icon: Briefcase, trend: '-0.1%', desc: 'Retail, E-commerce, Autos' },
-  { id: 'esg', name: 'Clean Energy', ticker: 'ICLN', icon: Leaf, trend: '+3.5%', desc: 'Solar, Wind, Renewables' },
+// Mock Sector Data with Industry details
+const SECTOR_DATA = [
+  {
+    id: 'tech',
+    name: 'Technology',
+    ticker: 'XLK',
+    icon: Cpu,
+    trend: '+1.2%',
+    desc: 'Software, Hardware, AI',
+    industries: [
+      { name: 'Semiconductors', value: '+3.4%', change: '+1.2%', stocks: ['NVDA', 'AMD', 'AVGO', 'INTC', 'TSM'] },
+      { name: 'Software - Infrastructure', value: '+1.8%', change: '+0.5%', stocks: ['MSFT', 'ORCL', 'PANW', 'SNOW', 'PLTR'] },
+      { name: 'Software - Application', value: '+0.9%', change: '+0.2%', stocks: ['CRM', 'ADBE', 'NOW', 'INTU', 'WDAY'] },
+      { name: 'Hardware', value: '-0.2%', change: '-0.1%', stocks: ['AAPL', 'DELL', 'HPQ', 'STX', 'WDC'] },
+      { name: 'Internet Content', value: '+2.1%', change: '+1.5%', stocks: ['GOOGL', 'META', 'NFLX', 'SNAP', 'PINS'] }
+    ]
+  },
+  {
+    id: 'fin',
+    name: 'Financials',
+    ticker: 'XLF',
+    icon: Landmark,
+    trend: '-0.4%',
+    desc: 'Banks, Insurance, Real Estate',
+    industries: [
+      { name: 'Banks - Diversified', value: '-0.8%', change: '-0.5%', stocks: ['JPM', 'BAC', 'WFC', 'C', 'GS'] },
+      { name: 'Asset Management', value: '+0.4%', change: '+0.2%', stocks: ['BLK', 'BX', 'MS', 'KKR', 'APO'] },
+      { name: 'Credit Services', value: '+1.2%', change: '+0.9%', stocks: ['V', 'MA', 'AXP', 'PYPL', 'COF'] }
+    ]
+  },
+  {
+    id: 'health',
+    name: 'Healthcare',
+    ticker: 'XLV',
+    icon: HeartPulse,
+    trend: '+0.8%',
+    desc: 'Pharma, Biotech, Devices',
+    industries: [
+      { name: 'Drug Manufacturers', value: '+0.5%', change: '+0.1%', stocks: ['LLY', 'JNJ', 'PFE', 'ABBV', 'MRK'] },
+      { name: 'Biotechnology', value: '+2.4%', change: '+1.8%', stocks: ['VRTX', 'AMGN', 'GILD', 'REGN', 'BIIB'] },
+      { name: 'Medical Devices', value: '+1.1%', change: '+0.7%', stocks: ['ISRG', 'MDT', 'SYK', 'BSX', 'EW'] }
+    ]
+  },
+  { id: 'energy', name: 'Energy', ticker: 'XLE', icon: Zap, trend: '+2.1%', desc: 'Oil, Gas, Consumables', industries: [] },
+  { id: 'consumer', name: 'Consumer', ticker: 'XLY', icon: Briefcase, trend: '-0.1%', desc: 'Retail, E-commerce, Autos', industries: [] },
+  { id: 'esg', name: 'Clean Energy', ticker: 'ICLN', icon: Leaf, trend: '+3.5%', desc: 'Solar, Wind, Renewables', industries: [] },
 ];
+
+const SECTORS = SECTOR_DATA;
 
 interface OHLCV {
   time: string;
@@ -69,6 +110,27 @@ interface AIAnalysis {
   articles: NewsArticle[];
 }
 
+const MARKETS_NEWS: { title: string; source: string; time: string; sentiment: 'Bullish' | 'Bearish' | 'Neutral'; region: string; category: string; impact: string }[] = [
+  { title: "Fed Signals Potential Rate Cut as Inflation Softens", source: "Macro Watch", time: "2h ago", sentiment: 'Bullish', region: 'US', category: 'Macro', impact: 'High' },
+  { title: "Eurozone PMI Hits 6-Month Low Amid Energy Concerns", source: "EuroStats", time: "4h ago", sentiment: 'Bearish', region: 'EU', category: 'Industrial', impact: 'Medium' },
+  { title: "Nvidia Supply Chain Expands into Vietnam and India", source: "Tech Pulse", time: "5h ago", sentiment: 'Bullish', region: 'Asia', category: 'Semis', impact: 'High' },
+  { title: "Oil Prices Stabilize After Brief Middle East Flare-up", source: "Energy Daily", time: "7h ago", sentiment: 'Neutral', region: 'Global', category: 'Energy', impact: 'Medium' },
+  { title: "Japan's Nikkei Reaches All-Time High on Corporate Reforms", source: "Asian Markets", time: "1d ago", sentiment: 'Bullish', region: 'Asia', category: 'Equity', impact: 'High' },
+  { title: "US Consumer Spending Slows in Q1; Retailers Wary", source: "Retail Signal", time: "1d ago", sentiment: 'Bearish', region: 'US', category: 'Consumer', impact: 'Medium' },
+  { title: "New AI Regulation Framework Proposed in Brussels", source: "Policy Pro", time: "2d ago", sentiment: 'Neutral', region: 'EU', category: 'Policy', impact: 'Low' },
+  { title: "Emerging Market Debt Levels Spark IMF Concerns", source: "World Finance", time: "2d ago", sentiment: 'Bearish', region: 'Global', category: 'Debt', impact: 'Medium' },
+];
+
+interface MarketNews {
+  title: string;
+  source: string;
+  time: string;
+  sentiment: 'Bullish' | 'Bearish' | 'Neutral';
+  region: string;
+  category: string;
+  impact: string;
+}
+
 interface PageChartEvent {
   date: string;
   headline: string;
@@ -78,6 +140,7 @@ interface PageChartEvent {
 }
 
 interface CompanyProfile {
+  name: string;
   intro: string;
   businessModel: string;
   profitability: string;
@@ -89,10 +152,54 @@ interface CompanyProfile {
   comparables: { ticker: string; name: string }[];
 }
 
+interface RiskIndicator {
+  name: string;
+  value: string | number;
+  change: string;
+  status: 'Bullish' | 'Neutral' | 'Bearish';
+  description: string;
+  insight: string;
+}
+
+interface PortfolioHolding {
+  ticker: string;
+  name: string;
+  price: number;
+  change: number;
+  weight: number;
+  color: string;
+}
+
+const RISK_INDICATORS: RiskIndicator[] = [
+  { name: 'VIX Index', value: '14.2', change: '-2.1%', status: 'Bullish', description: 'Fear & Tail-Risk', insight: 'VIX is currently bottoming out, suggesting market complacency. While technically bullish for momentum, it increases the risk of a sharp correction if macro data surprises.' },
+  { name: 'Credit Spreads', value: '345bps', change: '+12bps', status: 'Neutral', description: 'TED/High Yield Spreads', insight: 'Spreads are widening slightly in the High Yield sector, indicating some liquidity stress in lower-tier corporate debt. Monitor for spillover into broader equity markets.' },
+  { name: 'Put/Call Ratio', value: '0.82', change: '+0.05', status: 'Neutral', description: 'Options Sentiment', insight: 'The ratio is in the neutral zone, neither showing extreme greed nor panic. Institutional positioning is balanced ahead of the next FOMC meeting.' },
+  { name: 'A/D Line', value: '+1,240', change: '+150', status: 'Bullish', description: 'Market Breadth', insight: 'Breadth is expanding, with more stocks hitting new 52-week highs than lows. This suggests the current rally is well-supported and not just driven by Mega-Cap tech.' },
+  { name: '10Y-2Y Spread', value: '-32bps', change: '+5bps', status: 'Bearish', description: 'Recession Warning', insight: 'The yield curve remains inverted, though the spread is narrowing (disinverting). Historically, disinversion after a long period of inversion is a more immediate signal of an impending economic slowdown.' },
+  { name: '200DMA Breadth', value: '64%', change: '-2%', status: 'Bullish', description: '% Stocks > 200DMA', insight: '64% of S&P 500 stocks are above their long-term average. This is healthy, providing a cushion for the index even if leading stocks take a breather.' },
+];
+
+const CORRELATION_DATA = [
+  { pair: ['S&P 500', 'Nasdaq 100'], value: 0.94, trend: 'Increasing' },
+  { pair: ['S&P 500', 'Bitcoin'], value: 0.42, trend: 'Decreasing' },
+  { pair: ['S&P 500', 'Gold'], value: -0.15, trend: 'Stable' },
+  { pair: ['Nasdaq 100', 'US 10Y Yield'], value: -0.65, trend: 'Increasing' },
+  { pair: ['Bitcoin', 'Gold'], value: 0.28, trend: 'Increasing' },
+  { pair: ['Gold', 'USD Index'], value: -0.78, trend: 'Stable' },
+];
+
+const VAR_RESEARCH = {
+  description: '1-Day Value at Risk Analysis (95% Confidence)',
+  currentVaR: '1.45%',
+  stressScenario: '1987 Black Monday (Estimated Loss: -22.6%)',
+  riskSummary: 'The current market VaR of 1.45% indicates that there is a 95% probability that the portfolio will not lose more than 1.45% of its value in a single day. However, historical correlation shifts suggest that in a high-volatility event, the diversification benefit across sectors could drop by 30%, leading to a "VaR Breach."',
+  recommendation: 'Hedge high-beta technology exposures with inverse ETFs or treasury bonds to lower the tail-risk from current levels.'
+};
+
 export default function DashboardV3() {
   const { user, loading, signInWithGoogle, logout } = useAuth();
 
-  const [viewMode, setViewMode] = useState<'sectors' | 'industry' | 'stock'>('sectors');
+  const [viewMode, setViewMode] = useState<'sectors' | 'industry' | 'stock' | 'markets' | 'portfolio'>('sectors');
   const [selectedSector, setSelectedSector] = useState<typeof SECTORS[0] | null>(null);
   const [activeEventCategory, setActiveEventCategory] = useState<string | null>(null);
   const [stockData, setStockData] = useState<OHLCV[]>([]);
@@ -105,6 +212,36 @@ export default function DashboardV3() {
 
   const [activeTab, setActiveTab] = useState<'AI Forecast' | 'Fundamentals' | 'Business & Mgmt' | 'Comparables'>('AI Forecast');
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
+  const [marketNewsFilter, setMarketNewsFilter] = useState<'All' | 'Bullish' | 'Bearish'>('All');
+  const [marketRegionFilter, setMarketRegionFilter] = useState<'All' | 'US' | 'EU' | 'Asia' | 'Global'>('All');
+
+  const [portfolioHoldings, setPortfolioHoldings] = useState<PortfolioHolding[]>([
+    { ticker: 'AAPL', name: 'Apple Inc.', price: 182.52, change: 1.2, weight: 35, color: '#3b82f6' },
+    { ticker: 'NVDA', name: 'Nvidia Corp.', price: 875.28, change: 4.5, weight: 25, color: '#10b981' },
+    { ticker: 'MSFT', name: 'Microsoft Corp.', price: 415.50, change: 0.8, weight: 20, color: '#8b5cf6' },
+    { ticker: 'GOOGL', name: 'Alphabet Inc.', price: 145.62, change: -0.5, weight: 20, color: '#f59e0b' },
+  ]);
+
+  const addToPortfolio = (ticker: string, name: string) => {
+    if (portfolioHoldings.some(h => h.ticker === ticker)) return;
+    const newHolding: PortfolioHolding = {
+      ticker,
+      name,
+      price: 150.00, // Mock initial price
+      change: 0.5,
+      weight: 0,
+      color: `hsl(${Math.random() * 360}, 70%, 60%)`
+    };
+    setPortfolioHoldings([...portfolioHoldings, newHolding]);
+  };
+
+  const removeFromPortfolio = (ticker: string) => {
+    setPortfolioHoldings(portfolioHoldings.filter(h => h.ticker !== ticker));
+  };
+
+  const updateHoldingWeight = (ticker: string, weight: number) => {
+    setPortfolioHoldings(portfolioHoldings.map(h => h.ticker === ticker ? { ...h, weight } : h));
+  };
 
   useEffect(() => {
     fetchStockData(ticker);
@@ -124,16 +261,15 @@ export default function DashboardV3() {
   const fetchStockData = async (symbol: string) => {
     setLoadingData(true);
     try {
-      // Get last 3 years of data
       const threeYearsAgo = new Date();
       threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
-      const period1 = threeYearsAgo.toISOString().split('T')[0];
+      const period1 = Math.floor(threeYearsAgo.getTime() / 1000).toString();
 
       const res = await fetch(`/api/stock?ticker=${symbol}&period1=${period1}`);
       const result = await res.json();
       if (result.data) {
         setStockData(result.data);
-        const dummyEvents = result.data.filter((_: unknown, i: number) => i > 0 && i % 25 === 0).map((d: { time: string }) => {
+        const dummyEvents = result.data.filter((_: any, i: number) => i > 0 && i % 25 === 0).map((d: any) => {
           const isBull = Math.random() > 0.5;
           const types: PageChartEvent['type'][] = ['Earnings', 'Product', 'Macro', 'Policy', 'Management', 'Competition'];
           const randomType = types[Math.floor(Math.random() * types.length)];
@@ -318,14 +454,27 @@ export default function DashboardV3() {
         </div>
 
         <nav className="flex-1 px-4 flex flex-col gap-1">
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#ffffff0a] text-blue-400 font-medium">
+          <button
+            onClick={() => setViewMode('sectors')}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${viewMode === 'sectors' || viewMode === 'industry' || viewMode === 'stock' ? 'bg-[#ffffff0a] text-blue-400 font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#ffffff05]'}`}
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
             Event Dashboard
-          </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-[#ffffff05] transition-colors">
+          </button>
+          <button
+            onClick={() => setViewMode('markets')}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${viewMode === 'markets' ? 'bg-[#ffffff0a] text-blue-400 font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#ffffff05]'}`}
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
             Markets
-          </a>
+          </button>
+          <button
+            onClick={() => setViewMode('portfolio')}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${viewMode === 'portfolio' ? 'bg-[#ffffff0a] text-blue-400 font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#ffffff05]'}`}
+          >
+            <Briefcase size={18} />
+            My Portfolio
+          </button>
           <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-[#ffffff05] transition-colors">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
             Settings
@@ -501,7 +650,19 @@ export default function DashboardV3() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-10 relative z-10 w-1/4 justify-end">
+                      <div className="flex items-center gap-6 relative z-10 w-1/4 justify-end">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToPortfolio(stock.ticker, stock.name);
+                          }}
+                          className={`p-2 rounded-lg border transition-all ${portfolioHoldings.some(h => h.ticker === stock.ticker)
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                            : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-blue-500/50 hover:bg-blue-500/10'
+                            }`}
+                        >
+                          <Briefcase size={16} />
+                        </button>
                         <div className="text-right">
                           <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 opacity-60">Weight</div>
                           <div className="text-sm font-mono text-blue-400/80 font-black">{stock.weight}</div>
@@ -571,6 +732,294 @@ export default function DashboardV3() {
               </div>
             </div>
           </div>
+        ) : viewMode === 'markets' ? (
+          /* MARKETS VIEW */
+          <div className="flex flex-col h-screen p-8 overflow-y-auto ambient-glow-bg">
+            <div className="max-w-7xl mx-auto w-full flex flex-col gap-10">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
+                    <Activity size={32} className="text-blue-500" />
+                    Market Risk Intelligence
+                  </h1>
+                  <p className="text-gray-400 mt-2 font-medium">Macro risk indicators, correlation analysis, and VaR stress testing.</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">System Robust</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 6 Key Indicators Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {RISK_INDICATORS.map((indicator, i) => (
+                  <div key={i} className="glass-premium p-6 rounded-[2rem] border-white/5 relative group hover:border-blue-500/30 transition-all flex flex-col justify-between overflow-hidden">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/5 blur-[40px] group-hover:bg-blue-500/10 transition-all"></div>
+                    <div>
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{indicator.description}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${indicator.status === 'Bullish' ? 'bg-emerald-500/20 text-emerald-400' :
+                          indicator.status === 'Bearish' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'
+                          }`}>{indicator.status}</span>
+                      </div>
+                      <h3 className="text-xl font-black text-white mb-1">{indicator.name}</h3>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-mono font-black text-white">{indicator.value}</span>
+                        <span className={`text-sm font-bold ${indicator.change.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}`}>{indicator.change}</span>
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-white/5">
+                      <div className="flex items-start gap-2 bg-white/5 p-3 rounded-xl border border-white/5">
+                        <Cpu size={14} className="text-blue-500 mt-0.5" />
+                        <p className="text-[11px] leading-relaxed text-gray-400 italic">"{indicator.insight}"</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Research Sections: Correlation & VaR */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                {/* Correlation Matrix */}
+                <div className="glass-premium p-8 rounded-[2.5rem] border-white/5">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+                      <TrendingUp size={20} />
+                    </div>
+                    <h2 className="text-xl font-black text-white uppercase tracking-tight">Correlation Matrix Analysis</h2>
+                  </div>
+
+                  <div className="space-y-4 mb-8">
+                    {CORRELATION_DATA.map((item, i) => (
+                      <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all">
+                        <div className="flex -space-x-2">
+                          <div className="w-8 h-8 rounded-full bg-blue-600 border-2 border-[#0a0e17] flex items-center justify-center text-[10px] font-black">{item.pair[0].charAt(0)}</div>
+                          <div className="w-8 h-8 rounded-full bg-purple-600 border-2 border-[#0a0e17] flex items-center justify-center text-[10px] font-black">{item.pair[1].charAt(0)}</div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-bold text-gray-200">{item.pair[0]} ↔ {item.pair[1]}</div>
+                          <div className="text-[10px] text-gray-500 font-bold uppercase">{item.trend} Coupling</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xl font-mono font-black text-white">{(item.value * 100).toFixed(0)}%</div>
+                          <div className="h-1 w-16 bg-white/10 rounded-full mt-1 overflow-hidden">
+                            <div className="h-full bg-purple-500" style={{ width: `${item.value * 100}%` }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-5 bg-purple-500/5 rounded-2xl border border-purple-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="p-1 bg-purple-500/20 rounded text-purple-400"><Activity size={12} /></span>
+                      <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">StockLens Risk Intelligence</span>
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Extreme positive correlation (94%) detected between Nasdaq and S&P 500, indicating high systemic concentration in Tech. Portfolio diversification benefit is currently low.
+                    </p>
+                  </div>
+                </div>
+
+                {/* VaR Analysis */}
+                <div className="glass-premium p-8 rounded-[2.5rem] border-white/5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-8">
+                      <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+                        <ShieldAlert size={20} />
+                      </div>
+                      <h2 className="text-xl font-black text-white uppercase tracking-tight">VaR Research & Stress Test</h2>
+                    </div>
+
+                    <div className="bg-black/40 border border-white/10 p-8 rounded-3xl mb-8 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={64} /></div>
+                      <div className="text-[11px] text-gray-500 font-black uppercase tracking-widest mb-2">{VAR_RESEARCH.description}</div>
+                      <div className="text-5xl font-mono font-black text-emerald-400 mb-4">{VAR_RESEARCH.currentVaR}</div>
+                      <div className="text-sm text-gray-400 font-medium">Daily Value at Risk (VaR)</div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                        <div className="text-xs text-gray-400">Stress Scenario</div>
+                        <div className="text-sm font-black text-red-400 uppercase">{VAR_RESEARCH.stressScenario}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <div className="bg-emerald-500/5 rounded-2xl border border-emerald-500/20 p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="p-1 bg-emerald-500/20 rounded text-emerald-400"><Activity size={12} /></span>
+                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">VaR Intelligence Report</span>
+                      </div>
+                      <p className="text-sm text-gray-300 leading-relaxed font-medium mb-4">
+                        {VAR_RESEARCH.riskSummary}
+                      </p>
+                      <div className="pt-4 border-t border-white/10">
+                        <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest block mb-2">Recommendation</span>
+                        <p className="text-xs text-emerald-400 font-bold italic">"{VAR_RESEARCH.recommendation}"</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : viewMode === 'portfolio' ? (
+          /* PORTFOLIO VIEW */
+          <div className="flex flex-col h-screen p-8 overflow-y-auto ambient-glow-bg">
+            <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
+                    <Briefcase size={32} className="text-blue-500" />
+                    Portfolio Strategy
+                  </h1>
+                  <p className="text-gray-400 mt-2 font-medium">Build your custom allocation and simulate risk-adjusted returns.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Watchlist & Weights */}
+                <div className="lg:col-span-2 flex flex-col gap-6">
+                  <div className="glass-premium rounded-[2.5rem] border-white/5 overflow-hidden">
+                    <div className="p-8 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
+                      <h2 className="font-bold text-xl text-white tracking-tight">Active Holdings ({portfolioHoldings.length})</h2>
+                      <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Total Weight: {portfolioHoldings.reduce((acc, h) => acc + h.weight, 0)}%</div>
+                    </div>
+                    <div className="p-6 flex flex-col gap-4">
+                      {portfolioHoldings.length === 0 ? (
+                        <div className="p-12 text-center text-gray-500 italic">No holdings yet. Add stocks from the dashboard or industry lists.</div>
+                      ) : (
+                        portfolioHoldings.map((stock) => (
+                          <div key={stock.ticker} className="p-6 bg-white/[0.03] border border-white/5 rounded-[2rem] hover:border-blue-500/30 transition-all group overflow-hidden relative">
+                            <div className="flex items-center justify-between mb-6">
+                              <div className="flex items-center gap-4">
+                                <div
+                                  className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-white text-lg shadow-lg border border-white/10"
+                                  style={{ backgroundColor: stock.color }}
+                                >
+                                  {stock.ticker.charAt(0)}
+                                </div>
+                                <div>
+                                  <h3 className="font-black text-white text-lg tracking-tight group-hover:text-blue-400 transition-colors uppercase">{stock.ticker}</h3>
+                                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{stock.name} • ${stock.price.toFixed(2)}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className={`text-sm font-mono font-black ${stock.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                  {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(1)}%
+                                </div>
+                                <button
+                                  onClick={() => removeFromPortfolio(stock.ticker)}
+                                  className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                                >
+                                  <Activity size={12} />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                              <div className="flex justify-between items-center px-1">
+                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Rebalance Weight</span>
+                                <span className="text-sm font-mono text-white font-bold">{stock.weight}%</span>
+                              </div>
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={stock.weight}
+                                onChange={(e) => updateHoldingWeight(stock.ticker, parseInt(e.target.value))}
+                                className="w-full accent-blue-500 h-1 mt-2 appearance-none bg-white/10 rounded-full outline-none focus:bg-white/20 transition-all cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Portfolio Insight Report */}
+                  <div className="glass-premium p-8 rounded-[2.5rem] border-white/5 bg-blue-600/5 relative overflow-hidden">
+                    <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-blue-600/10 blur-[100px] rounded-full"></div>
+                    <div className="flex items-center gap-3 mb-6 relative z-10">
+                      <Cpu size={20} className="text-blue-500" />
+                      <h2 className="text-lg font-black text-white uppercase tracking-tight">AI Portfolio Intelligence</h2>
+                    </div>
+                    <div className="space-y-4 relative z-10">
+                      <p className="text-sm text-gray-300 leading-relaxed font-medium">
+                        Based on your current allocation, your portfolio has a high concentration in **Technology ({(portfolioHoldings.filter(h => ['AAPL', 'NVDA', 'MSFT'].includes(h.ticker)).reduce((acc, h) => acc + h.weight, 0))}% total weight)**.
+                        While historically high-performing, this exposure increases volatility during interest rate shifts.
+                      </p>
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                        <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest block mb-2">Optimizer Recommendation</span>
+                        <p className="text-xs text-gray-400 font-bold italic">
+                          Consider rebalancing to include more **Defensive (Healthcare/Energy)** sectors to lower your overall Portfolio Beta which is currently at **1.24**.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Allocation Summary & Visualization */}
+                <div className="flex flex-col gap-6">
+                  <div className="glass-premium p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden h-fit sticky top-8">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 blur-[60px] rounded-full"></div>
+
+                    <h2 className="text-lg font-black text-white uppercase tracking-tight mb-8">Strategy Analytics</h2>
+
+                    <div className="flex flex-col gap-6 mb-8">
+                      <div className="bg-black/40 border border-white/5 p-6 rounded-[2rem]">
+                        <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Total Market Value</div>
+                        <div className="text-3xl font-mono text-white font-black">${(portfolioHoldings.reduce((acc, h) => acc + (h.price * h.weight * 10), 0)).toLocaleString()}</div>
+                        <div className="text-xs text-emerald-400 font-bold mt-1">+12.4% (Calculated Estimate)</div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-3">
+                          <span className="text-gray-400 font-black uppercase tracking-tighter text-[10px]">Active Diversification</span>
+                          <span className={`${portfolioHoldings.length > 3 ? 'text-emerald-400' : 'text-orange-400'} font-mono font-bold text-xs uppercase`}>
+                            {portfolioHoldings.length > 3 ? 'Optimal' : 'Concentrated'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-3">
+                          <span className="text-gray-400 font-black uppercase tracking-tighter text-[10px]">Projected Risk Score</span>
+                          <span className="text-orange-400 font-mono font-bold text-xs uppercase">Medium (6.4)</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-3">
+                          <span className="text-gray-400 font-black uppercase tracking-tighter text-[10px]">Alpha Potential</span>
+                          <span className="text-blue-400 font-mono font-bold text-xs uppercase">High</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-white/5">
+                      <h3 className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-4">Allocation Mix</h3>
+                      <div className="flex gap-1 h-4 rounded-full overflow-hidden border border-white/5 mb-6 bg-white/5 p-1">
+                        {portfolioHoldings.map((h, i) => (
+                          <div key={i} className="h-full rounded-sm transition-all" style={{ width: `${h.weight}%`, backgroundColor: h.color }}></div>
+                        ))}
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        {portfolioHoldings.map((h, i) => (
+                          <div key={i} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: h.color }}></div>
+                              <span className="text-[10px] text-gray-300 font-bold uppercase tracking-tight">{h.ticker}</span>
+                            </div>
+                            <span className="text-[10px] font-mono text-gray-500 font-black">{h.weight}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         ) : (
           /* STOCKLENS DASHBOARD VIEW */
           <div className="flex flex-col h-screen ambient-glow-bg">
@@ -607,6 +1056,17 @@ export default function DashboardV3() {
               </div>
 
               <div className="flex gap-4 items-center">
+                <button
+                  onClick={() => addToPortfolio(ticker, companyProfile?.name || ticker)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-[10px] font-black uppercase tracking-widest ${portfolioHoldings.some(h => h.ticker === ticker)
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                    : 'bg-blue-600 border-blue-500 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20'
+                    }`}
+                >
+                  <Briefcase size={12} />
+                  {portfolioHoldings.some(h => h.ticker === ticker) ? 'In Portfolio' : 'Add to Portfolio'}
+                </button>
+                <div className="h-4 w-px bg-white/10 mx-1"></div>
                 <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   LIVE EVENTS
@@ -651,7 +1111,7 @@ export default function DashboardV3() {
                         <theme.icon className={`${theme.color} ${isActive ? 'brightness-125 scale-110 transition-transform' : ''}`} size={20} />
                         <div>
                           <div className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-gray-200'}`}>{theme.id}</div>
-                          <div className={`text-xs font-mono animate-in fade-in ${isActive ? 'text-gray-300 font-bold' : 'text-gray-500'}`}>{dateAnalysis ? count : `${count}+`} docs</div>
+                          <div className={`text-xs font-mono animate-in fade-in ${isActive ? 'text-gray-300 font-bold' : 'text-gray-50'}`}>{dateAnalysis ? count : `${count}+`} docs</div>
                         </div>
                       </div>
                     );
@@ -940,11 +1400,6 @@ export default function DashboardV3() {
                           <Activity size={16} className="text-gray-600 group-hover:text-blue-500 transition-colors" />
                         </button>
                       ))}
-                      {companyProfile.comparables.length === 0 && (
-                        <div className="text-sm text-gray-500 text-center py-8 border border-dashed border-gray-800 rounded">
-                          No comparable companies found.
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}

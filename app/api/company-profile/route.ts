@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profiles: Record<string, any> = {
         'AAPL': {
+            name: "Apple Inc.",
             intro: "Apple designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories globally.",
             businessModel: "Hardware sales (iPhone, Mac, iPad) heavily integrated with a high-margin Services ecosystem (App Store, iCloud, Apple Music).",
             profitability: "Industry-leading gross margins (~45%) driven by premium device pricing and a rapidly growing services segment (~70% gross margin).",
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
             comparables: [] // to be populated
         },
         'MSFT': {
+            name: "Microsoft Corporation",
             intro: "Microsoft develops and supports software, services, devices, and solutions worldwide, primarily known for Windows and Office.",
             businessModel: "Recurring subscription revenue via Microsoft 365, enterprise cloud computing (Azure), and consumer hardware/gaming (Xbox).",
             profitability: "Exceptional operating margins (~44%) fueled by the high operational leverage of its commercial cloud segments.",
@@ -79,6 +81,7 @@ export async function GET(request: NextRequest) {
             comparables: []
         },
         'NVDA': {
+            name: "NVIDIA Corporation",
             intro: "NVIDIA accelerates computing globally, specializing in graphics processing units (GPUs) and AI computing infrastructure.",
             businessModel: "Selling high-performance hardware and bundled software stacks (CUDA) primarily to data centers, gamers, and automotive markets.",
             profitability: "Record-breaking gross margins (+70%) due to unprecedented global demand and pricing power for its Hopper architecture AI chips.",
@@ -112,6 +115,7 @@ export async function GET(request: NextRequest) {
             comparables: []
         },
         'TSLA': {
+            name: "Tesla, Inc.",
             intro: "Tesla designs, develops, manufactures, and sells fully electric vehicles, and energy generation and storage systems.",
             businessModel: "Direct-to-consumer EV sales augmented by high-margin software (FSD) and a rapidly growing energy storage business.",
             profitability: "Industry-leading automotive gross margins that have recently compressed due to aggressive price cuts to defend market share.",
@@ -145,6 +149,7 @@ export async function GET(request: NextRequest) {
             comparables: []
         },
         'JPM': {
+            name: "JPMorgan Chase & Co.",
             intro: "JPMorgan Chase is a leading global financial services firm providing investment banking, commercial banking, and asset management.",
             businessModel: "Diversified revenue streams spanning consumer lending, robust institutional trading, and massive wealth management fees.",
             profitability: "Consistently generating high Return on Tangible Common Equity (ROTCE ~20%) through scale efficiencies and strategic acquisitions.",
@@ -181,6 +186,7 @@ export async function GET(request: NextRequest) {
 
     // Generic fallback for any other ticker
     const fallbackProfile = {
+        name: ticker,
         intro: `${ticker} operates as a publicly traded company engaged in its respective industry, providing goods or services to a global client base.`,
         businessModel: "Generates revenue through the sale of core products and associated services, focusing on expanding market share and operational scale.",
         profitability: "Maintains stable gross margins characteristic of its sector, balancing growth investments with shareholder return initiatives.",
