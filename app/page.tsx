@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { usePortfolio } from '../contexts/PortfolioContext';
 import dynamic from 'next/dynamic';
 import {
   Briefcase,
@@ -161,14 +162,7 @@ interface RiskIndicator {
   insight: string;
 }
 
-interface PortfolioHolding {
-  ticker: string;
-  name: string;
-  price: number;
-  change: number;
-  weight: number;
-  color: string;
-}
+
 
 const RISK_INDICATORS: RiskIndicator[] = [
   { name: 'VIX Index', value: '14.2', change: '-2.1%', status: 'Bullish', description: 'Fear & Tail-Risk', insight: 'VIX is currently bottoming out, suggesting market complacency. While technically bullish for momentum, it increases the risk of a sharp correction if macro data surprises.' },
@@ -198,6 +192,7 @@ const VAR_RESEARCH = {
 
 export default function DashboardV3() {
   const { user, loading, signInWithGoogle, logout } = useAuth();
+  const { portfolioHoldings, addHolding: addToPortfolio, removeHolding: removeFromPortfolio, updateWeight: updateHoldingWeight } = usePortfolio();
 
   const [viewMode, setViewMode] = useState<'sectors' | 'industry' | 'stock' | 'markets' | 'portfolio'>('sectors');
   const [selectedSector, setSelectedSector] = useState<typeof SECTORS[0] | null>(null);
@@ -215,33 +210,7 @@ export default function DashboardV3() {
   const [marketNewsFilter, setMarketNewsFilter] = useState<'All' | 'Bullish' | 'Bearish'>('All');
   const [marketRegionFilter, setMarketRegionFilter] = useState<'All' | 'US' | 'EU' | 'Asia' | 'Global'>('All');
 
-  const [portfolioHoldings, setPortfolioHoldings] = useState<PortfolioHolding[]>([
-    { ticker: 'AAPL', name: 'Apple Inc.', price: 182.52, change: 1.2, weight: 35, color: '#3b82f6' },
-    { ticker: 'NVDA', name: 'Nvidia Corp.', price: 875.28, change: 4.5, weight: 25, color: '#10b981' },
-    { ticker: 'MSFT', name: 'Microsoft Corp.', price: 415.50, change: 0.8, weight: 20, color: '#8b5cf6' },
-    { ticker: 'GOOGL', name: 'Alphabet Inc.', price: 145.62, change: -0.5, weight: 20, color: '#f59e0b' },
-  ]);
 
-  const addToPortfolio = (ticker: string, name: string) => {
-    if (portfolioHoldings.some(h => h.ticker === ticker)) return;
-    const newHolding: PortfolioHolding = {
-      ticker,
-      name,
-      price: 150.00, // Mock initial price
-      change: 0.5,
-      weight: 0,
-      color: `hsl(${Math.random() * 360}, 70%, 60%)`
-    };
-    setPortfolioHoldings([...portfolioHoldings, newHolding]);
-  };
-
-  const removeFromPortfolio = (ticker: string) => {
-    setPortfolioHoldings(portfolioHoldings.filter(h => h.ticker !== ticker));
-  };
-
-  const updateHoldingWeight = (ticker: string, weight: number) => {
-    setPortfolioHoldings(portfolioHoldings.map(h => h.ticker === ticker ? { ...h, weight } : h));
-  };
 
   useEffect(() => {
     fetchStockData(ticker);
@@ -440,6 +409,60 @@ export default function DashboardV3() {
       console.error(err);
     }
   };
+
+  const totalWeight = portfolioHoldings.reduce((acc, h) => acc + h.weight, 0) || 1;
+  const getSectorForTicker = (ticker: string) => {
+    for (const sector of SECTORS) {
+      if (sector.ticker === ticker) return sector.name;
+      for (const industry of sector.industries) {
+        if (industry.stocks && industry.stocks.includes(ticker)) return sector.name;
+      }
+    }
+    if (['AMZN', 'TSLA', 'HD'].includes(ticker)) return 'Consumer';
+    if (['XOM', 'CVX', 'COP'].includes(ticker)) return 'Energy';
+    if (['NEE', 'ENPH', 'FSLR'].includes(ticker)) return 'Clean Energy';
+    if (['JPM', 'V', 'MA'].includes(ticker)) return 'Financials';
+    if (['LLY', 'UNH', 'JNJ'].includes(ticker)) return 'Healthcare';
+    return 'Other';
+  };
+
+  const sectorWeights: Record<string, number> = {};
+  portfolioHoldings.forEach((h: any) => {
+    const sector = getSectorForTicker(h.ticker);
+    sectorWeights[sector] = (sectorWeights[sector] || 0) + h.weight;
+  });
+
+  const dominantSector = Object.keys(sectorWeights).length > 0
+    ? Object.keys(sectorWeights).reduce((a, b) => sectorWeights[a] > sectorWeights[b] ? a : b)
+    : 'None';
+  const dominantWeight = sectorWeights[dominantSector] || 0;
+
+  const getMockBeta = (ticker: string) => {
+    const s = getSectorForTicker(ticker);
+    if (s === 'Technology') return 1.3;
+    if (s === 'Consumer') return 1.2;
+    if (s === 'Financials') return 1.1;
+    if (s === 'Healthcare') return 0.8;
+    if (s === 'Energy') return 0.9;
+    if (s === 'Clean Energy') return 1.4;
+    return 1.0;
+  };
+
+  const portfolioBeta = portfolioHoldings.length > 0
+    ? portfolioHoldings.reduce((acc, h) => acc + (getMockBeta(h.ticker) * (h.weight / totalWeight)), 0)
+    : 1.0;
+
+  const aiInsightText = dominantWeight > 50
+    ? `Based on your current allocation, your portfolio has a high concentration in **${dominantSector} (${dominantWeight}% absolute weight)**. While this can drive returns, it increases specific sector risk.`
+    : portfolioHoldings.length === 0
+      ? "Add assets to your portfolio to generate AI-driven allocation insights and risk metrics."
+      : `Your portfolio shows a balanced diversification with the highest weight in **${dominantSector} (${dominantWeight}% absolute weight)**. Sector concentration risk remains moderate.`;
+
+  const aiRecommendationText = portfolioBeta > 1.1
+    ? `Consider rebalancing to include more **Defensive (Healthcare/Energy)** sectors to lower your overall Portfolio Beta which is currently elevated at **${portfolioBeta.toFixed(2)}**.`
+    : portfolioBeta < 0.9
+      ? `Your portfolio is highly defensive with a Beta of **${portfolioBeta.toFixed(2)}**. You may underperform in strong bull markets. Consider adding **Technology** exposure.`
+      : `Your portfolio risk is well-balanced with a Beta of **${portfolioBeta.toFixed(2)}**. Maintain current strategic allocations.`;
 
   return (
     <div className="flex h-screen w-screen bg-[#0a0e17] text-gray-100 overflow-hidden font-sans">
@@ -951,13 +974,12 @@ export default function DashboardV3() {
                     </div>
                     <div className="space-y-4 relative z-10">
                       <p className="text-sm text-gray-300 leading-relaxed font-medium">
-                        Based on your current allocation, your portfolio has a high concentration in **Technology ({(portfolioHoldings.filter(h => ['AAPL', 'NVDA', 'MSFT'].includes(h.ticker)).reduce((acc, h) => acc + h.weight, 0))}% total weight)**.
-                        While historically high-performing, this exposure increases volatility during interest rate shifts.
+                        {aiInsightText.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-white">{part}</strong> : part)}
                       </p>
                       <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
                         <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest block mb-2">Optimizer Recommendation</span>
                         <p className="text-xs text-gray-400 font-bold italic">
-                          Consider rebalancing to include more **Defensive (Healthcare/Energy)** sectors to lower your overall Portfolio Beta which is currently at **1.24**.
+                          {aiRecommendationText.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-white">{part}</strong> : part)}
                         </p>
                       </div>
                     </div>
