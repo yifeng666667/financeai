@@ -464,7 +464,7 @@ export default function DashboardV3() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
-                   {getIndustryMockData(selectedSector.id).stocks.map((stock: any, i) => (
+                  {getIndustryMockData(selectedSector.id).stocks.map((stock: any, i) => (
                     <button
                       key={i}
                       onClick={() => {
@@ -521,14 +521,14 @@ export default function DashboardV3() {
               {/* Right Column: Macro Catalysts */}
               <div className="w-[450px] shrink-0 flex flex-col gap-6">
                 <div className="glass-premium p-8 flex flex-col h-full rounded-[2rem] border-white/5 shadow-2xl relative overflow-hidden">
-                   {/* Background Ambient Glow */}
-                   <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/10 blur-[100px] rounded-full"></div>
-                   <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-600/5 blur-[100px] rounded-full"></div>
+                  {/* Background Ambient Glow */}
+                  <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/10 blur-[100px] rounded-full"></div>
+                  <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-600/5 blur-[100px] rounded-full"></div>
 
                   <div className="flex flex-col gap-3 mb-8 pb-8 border-b border-[#ffffff0a] relative z-10">
                     <div className="flex items-center gap-2">
-                       <Activity size={18} className="text-blue-500" />
-                       <h2 className="text-xl font-black text-white tracking-tight uppercase">Macro Catalysts</h2>
+                      <Activity size={18} className="text-blue-500" />
+                      <h2 className="text-xl font-black text-white tracking-tight uppercase">Macro Catalysts</h2>
                     </div>
                     <p className="text-sm text-gray-400 leading-relaxed font-medium">
                       AI-aggregated events expected to drive {selectedSector.name} volatility over the next 3-6 months.
@@ -676,7 +676,7 @@ export default function DashboardV3() {
                         return (
                           <div className="h-full flex flex-col items-center justify-center text-gray-600">
                             <Activity size={32} className="mb-2 opacity-50" />
-                            <span className="text-sm">No articles found for "{activeEventCategory}".</span>
+                            <span className="text-sm">No articles found for &quot;{activeEventCategory}&quot;.</span>
                             <button onClick={() => setActiveEventCategory(null)} className="mt-2 text-xs text-blue-500 hover:underline">Clear Filter</button>
                           </div>
                         );

@@ -11,15 +11,24 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Initialize Firebase safely
-let app;
-let auth;
-let db;
+// Initialize Firebase safely for build
+let app: any;
+let auth: any;
+let db: any;
 
 if (typeof window !== 'undefined' || process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
+    try {
+        app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        auth = getAuth(app);
+        db = getFirestore(app);
+    } catch (e) {
+        console.error("Firebase initialization failed", e);
+    }
+} else {
+    // Fallback for build phase
+    app = {};
+    auth = {};
+    db = {};
 }
 
 const googleProvider = new GoogleAuthProvider();
