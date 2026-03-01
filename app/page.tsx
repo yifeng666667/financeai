@@ -659,13 +659,15 @@ export default function DashboardV3() {
 
                 <div className="grid grid-cols-1 gap-4">
                   {getIndustryMockData(selectedSector.id).stocks.map((stock: any, i) => (
-                    <button
+                    <div
                       key={i}
                       onClick={() => {
                         setTicker(stock.ticker);
                         setViewMode('stock');
                       }}
-                      className="glass-premium p-5 flex items-center justify-between hover:border-blue-500/50 hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] transition-all group relative overflow-hidden active:scale-[0.99] duration-300"
+                      role="button"
+                      tabIndex={0}
+                      className="glass-premium p-5 flex items-center justify-between hover:border-blue-500/50 hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] transition-all group relative overflow-hidden active:scale-[0.99] duration-300 cursor-pointer"
                     >
                       {/* Subtle Background Glow on Hover */}
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/0 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
@@ -719,7 +721,7 @@ export default function DashboardV3() {
                           </div>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
