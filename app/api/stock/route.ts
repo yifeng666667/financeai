@@ -6,7 +6,16 @@ const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     let ticker = searchParams.get('ticker') || 'SPY'; // Default to S&P 500 ETF
-    const period1 = searchParams.get('period1') || '2023-01-01'; // Default fetch a year back
+    const period1Param = searchParams.get('period1') || '2023-01-01'; // Default fetch a year back
+
+    let period1: string | number | Date = period1Param;
+
+    // Parse period1 as Date if it is a numeric timestamp (unix timestamp in seconds)
+    if (!isNaN(Number(period1Param)) && !period1Param.includes('-')) {
+        period1 = new Date(Number(period1Param) * 1000);
+    } else {
+        period1 = new Date(period1Param);
+    }
 
     // Some basic mapping for crypto vs stock
     ticker = ticker.toUpperCase();
@@ -14,7 +23,7 @@ export async function GET(request: NextRequest) {
     try {
         const queryOptions = {
             period1: period1,
-            period2: new Date().toISOString().split('T')[0],
+            period2: new Date(),
             interval: '1d' as const
         };
         const result = await yahooFinance.chart(ticker, queryOptions);

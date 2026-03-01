@@ -16,9 +16,10 @@ export interface PortfolioHolding {
 interface PortfolioContextType {
     portfolioHoldings: PortfolioHolding[];
     loading: boolean;
-    addHolding: (ticker: string, name: string) => Promise<void>;
+    addHolding: (ticker: string, name: string, price?: number) => Promise<void>;
     removeHolding: (ticker: string) => Promise<void>;
     updateWeight: (ticker: string, weight: number) => Promise<void>;
+    applyModelPortfolio: (holdings: PortfolioHolding[]) => Promise<void>;
 }
 
 const PortfolioContext = createContext<PortfolioContextType>({
@@ -27,6 +28,7 @@ const PortfolioContext = createContext<PortfolioContextType>({
     addHolding: async () => { },
     removeHolding: async () => { },
     updateWeight: async () => { },
+    applyModelPortfolio: async () => { },
 });
 
 export const usePortfolio = () => useContext(PortfolioContext);
@@ -38,7 +40,17 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
 
     useEffect(() => {
         if (!user) {
-            setPortfolioHoldings([]);
+            const localPortfolio = localStorage.getItem('financeai_portfolio');
+            if (localPortfolio) {
+                try {
+                    setPortfolioHoldings(JSON.parse(localPortfolio));
+                } catch (e) {
+                    console.error("Error parsing local portfolio:", e);
+                    setPortfolioHoldings([]);
+                }
+            } else {
+                setPortfolioHoldings([]);
+            }
             setLoading(false);
             return;
         }
@@ -61,37 +73,81 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
         return () => unsubscribe();
     }, [user]);
 
-    const addHolding = async (ticker: string, name: string) => {
-        if (!user) return;
+    // Save to local storage whenever holdings change if not logged in
+    useEffect(() => {
+        if (!user && !loading) {
+            localStorage.setItem('financeai_portfolio', JSON.stringify(portfolioHoldings));
+        }
+    }, [portfolioHoldings, user, loading]);
+
+    const addHolding = async (ticker: string, name: string, price?: number) => {
         if (portfolioHoldings.some((h) => h.ticker === ticker)) return;
 
         const newHolding: PortfolioHolding = {
             ticker,
             name,
-            price: 150.00, // Default mock price
+            price: price || 150.00, // Use dynamic price
             change: 0.5,
             weight: 0,
             color: `hsl(${Math.random() * 360}, 70%, 60%)`
         };
+
+        if (!user) {
+            setPortfolioHoldings(prev => {
+                const newHoldings = [...prev, newHolding];
+                newHoldings.sort((a, b) => b.weight - a.weight);
+                return newHoldings;
+            });
+            return;
+        }
 
         const holdingRef = doc(db, 'users', user.uid, 'portfolio', ticker);
         await setDoc(holdingRef, newHolding);
     };
 
     const removeHolding = async (ticker: string) => {
-        if (!user) return;
+        if (!user) {
+            setPortfolioHoldings(prev => prev.filter(h => h.ticker !== ticker));
+            return;
+        }
         const holdingRef = doc(db, 'users', user.uid, 'portfolio', ticker);
         await deleteDoc(holdingRef);
     };
 
     const updateWeight = async (ticker: string, weight: number) => {
-        if (!user) return;
+        if (!user) {
+            setPortfolioHoldings(prev => {
+                const newHoldings = prev.map(h => h.ticker === ticker ? { ...h, weight } : h);
+                newHoldings.sort((a, b) => b.weight - a.weight);
+                return newHoldings;
+            });
+            return;
+        }
         const holdingRef = doc(db, 'users', user.uid, 'portfolio', ticker);
         await setDoc(holdingRef, { weight }, { merge: true });
     };
 
+    const applyModelPortfolio = async (holdings: PortfolioHolding[]) => {
+        if (!user) {
+            setPortfolioHoldings(holdings);
+            return;
+        }
+
+        // Clear existing portfolio first
+        for (const holding of portfolioHoldings) {
+            const holdingRef = doc(db, 'users', user.uid, 'portfolio', holding.ticker);
+            await deleteDoc(holdingRef);
+        }
+
+        // Add new holdings
+        for (const holding of holdings) {
+            const holdingRef = doc(db, 'users', user.uid, 'portfolio', holding.ticker);
+            await setDoc(holdingRef, holding);
+        }
+    };
+
     return (
-        <PortfolioContext.Provider value={{ portfolioHoldings, loading, addHolding, removeHolding, updateWeight }}>
+        <PortfolioContext.Provider value={{ portfolioHoldings, loading, addHolding, removeHolding, updateWeight, applyModelPortfolio }}>
             {children}
         </PortfolioContext.Provider>
     );

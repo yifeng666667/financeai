@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePortfolio } from '../contexts/PortfolioContext';
 import dynamic from 'next/dynamic';
@@ -212,9 +212,51 @@ const VAR_RESEARCH = {
   recommendation: 'Hedge high-beta technology exposures with inverse ETFs or treasury bonds to lower the tail-risk from current levels.'
 };
 
+
+
+// Model Portfolios
+const AGGRESSIVE_GROWTH_PORTFOLIO = [
+  { ticker: 'NVDA', name: 'NVIDIA Corp.', price: 822.79, change: 0, weight: 20, color: 'hsl(120, 70%, 60%)' },
+  { ticker: 'TSLA', name: 'Tesla Inc.', price: 175.22, change: 0, weight: 15, color: 'hsl(0, 70%, 60%)' },
+  { ticker: 'AMD', name: 'Advanced Micro Devices', price: 192.53, change: 0, weight: 15, color: 'hsl(300, 70%, 60%)' },
+  { ticker: 'PLTR', name: 'Palantir Technologies', price: 24.50, change: 0, weight: 10, color: 'hsl(210, 70%, 40%)' },
+  { ticker: 'SMCI', name: 'Super Micro Computer', price: 1020.50, change: 0, weight: 10, color: 'hsl(240, 70%, 60%)' },
+  { ticker: 'CRWD', name: 'CrowdStrike Holdings', price: 320.15, change: 0, weight: 10, color: 'hsl(10, 70%, 50%)' },
+  { ticker: 'META', name: 'Meta Platforms', price: 502.30, change: 0, weight: 5, color: 'hsl(220, 70%, 60%)' },
+  { ticker: 'GOOGL', name: 'Alphabet Inc.', price: 142.65, change: 0, weight: 5, color: 'hsl(15, 70%, 60%)' },
+  { ticker: 'MSFT', name: 'Microsoft Corp.', price: 415.50, change: 0, weight: 5, color: 'hsl(200, 70%, 60%)' },
+  { ticker: 'AMZN', name: 'Amazon.com Inc.', price: 178.22, change: 0, weight: 5, color: 'hsl(30, 70%, 50%)' },
+];
+
+const GROWTH_PORTFOLIO = [
+  { ticker: 'MSFT', name: 'Microsoft Corp.', price: 415.50, change: 0, weight: 15, color: 'hsl(200, 70%, 60%)' },
+  { ticker: 'AAPL', name: 'Apple Inc.', price: 189.45, change: 0, weight: 15, color: 'hsl(0, 0%, 80%)' },
+  { ticker: 'NVDA', name: 'NVIDIA Corp.', price: 822.79, change: 0, weight: 15, color: 'hsl(120, 70%, 60%)' },
+  { ticker: 'GOOGL', name: 'Alphabet Inc.', price: 142.65, change: 0, weight: 10, color: 'hsl(15, 70%, 60%)' },
+  { ticker: 'AMZN', name: 'Amazon.com Inc.', price: 178.22, change: 0, weight: 10, color: 'hsl(30, 70%, 50%)' },
+  { ticker: 'META', name: 'Meta Platforms', price: 502.30, change: 0, weight: 10, color: 'hsl(220, 70%, 60%)' },
+  { ticker: 'AVGO', name: 'Broadcom Inc.', price: 1305.20, change: 0, weight: 5, color: 'hsl(340, 70%, 50%)' },
+  { ticker: 'LLY', name: 'Eli Lilly', price: 754.20, change: 0, weight: 5, color: 'hsl(350, 70%, 60%)' },
+  { ticker: 'NFLX', name: 'Netflix Inc.', price: 620.10, change: 0, weight: 5, color: 'hsl(0, 80%, 50%)' },
+  { ticker: 'CRM', name: 'Salesforce Inc.', price: 308.20, change: 0, weight: 10, color: 'hsl(200, 80%, 40%)' },
+];
+
+const BALANCED_PORTFOLIO = [
+  { ticker: 'AAPL', name: 'Apple Inc.', price: 189.45, change: 0, weight: 10, color: 'hsl(0, 0%, 80%)' },
+  { ticker: 'MSFT', name: 'Microsoft Corp.', price: 415.50, change: 0, weight: 10, color: 'hsl(200, 70%, 60%)' },
+  { ticker: 'JPM', name: 'JPMorgan Chase', price: 188.22, change: 0, weight: 10, color: 'hsl(210, 50%, 40%)' },
+  { ticker: 'JNJ', name: 'Johnson & Johnson', price: 158.40, change: 0, weight: 10, color: 'hsl(0, 60%, 50%)' },
+  { ticker: 'PG', name: 'Procter & Gamble', price: 160.20, change: 0, weight: 10, color: 'hsl(240, 40%, 40%)' },
+  { ticker: 'UNH', name: 'UnitedHealth Group', price: 482.15, change: 0, weight: 10, color: 'hsl(220, 60%, 50%)' },
+  { ticker: 'V', name: 'Visa Inc.', price: 282.15, change: 0, weight: 10, color: 'hsl(40, 80%, 50%)' },
+  { ticker: 'WMT', name: 'Walmart Inc.', price: 60.50, change: 0, weight: 10, color: 'hsl(200, 80%, 50%)' },
+  { ticker: 'XOM', name: 'Exxon Mobil', price: 112.30, change: 0, weight: 10, color: 'hsl(0, 50%, 40%)' },
+  { ticker: 'BRK.B', name: 'Berkshire Hathaway', price: 410.20, change: 0, weight: 10, color: 'hsl(280, 50%, 40%)' },
+];
+
 export default function DashboardV3() {
   const { user, loading, signInWithGoogle, logout } = useAuth();
-  const { portfolioHoldings, addHolding: addToPortfolio, removeHolding: removeFromPortfolio, updateWeight: updateHoldingWeight } = usePortfolio();
+  const { portfolioHoldings, addHolding: addToPortfolio, removeHolding: removeFromPortfolio, updateWeight: updateHoldingWeight, applyModelPortfolio } = usePortfolio();
 
   const [viewMode, setViewMode] = useState<'sectors' | 'industry' | 'stock' | 'markets' | 'portfolio'>('sectors');
   const [selectedSector, setSelectedSector] = useState<typeof SECTORS[0] | null>(null);
@@ -227,8 +269,13 @@ export default function DashboardV3() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [dateAnalysis, setDateAnalysis] = useState<AIAnalysis | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'AI Forecast' | 'Fundamentals' | 'Business & Mgmt' | 'Comparables'>('AI Forecast');
+  const [activeTab, setActiveTab] = useState<'AI Forecast' | 'Fundamentals' | 'Business & Mgmt' | 'Comparables' | '✨ Sales Copilot'>('✨ Sales Copilot');
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
+
+  // AI Sales Copilot States
+  const [copilotContent, setCopilotContent] = useState<string>('');
+  const [isGeneratingCopilot, setIsGeneratingCopilot] = useState<boolean>(false);
+
   const [marketNewsFilter, setMarketNewsFilter] = useState<'All' | 'Bullish' | 'Bearish'>('All');
   const [marketRegionFilter, setMarketRegionFilter] = useState<'All' | 'US' | 'EU' | 'Asia' | 'Global'>('All');
 
@@ -420,7 +467,7 @@ export default function DashboardV3() {
     setActiveEventCategory(null);
 
     try {
-      const res = await fetch('/api/analyze-date', {
+      const res = await fetch(`/api/analyze-date`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date, ticker })
@@ -429,6 +476,37 @@ export default function DashboardV3() {
       setDateAnalysis(data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // AI Sales Copilot Streaming Function
+  const generateCopilotContent = async (type: 'pitch' | 'objection' | 'analyst_report', audience?: 'Hedge Fund' | 'Long-Only') => {
+    setIsGeneratingCopilot(true);
+    setCopilotContent('');
+    setActiveTab('✨ Sales Copilot');
+
+    try {
+      const response = await fetch('/api/copilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker, type, audience })
+      });
+
+      if (!response.body) throw new Error('ReadableStream processing failed');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        setCopilotContent((prev) => prev + decoder.decode(value, { stream: true }));
+      }
+    } catch (error) {
+      console.error('Error streaming copilot content:', error);
+      setCopilotContent('Failed to generate insights. Please try again.');
+    } finally {
+      setIsGeneratingCopilot(false);
     }
   };
 
@@ -701,7 +779,7 @@ export default function DashboardV3() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            addToPortfolio(stock.ticker, stock.name);
+                            addToPortfolio(stock.ticker, stock.name, parseFloat(stock.price.replace(/[^0-9.-]+/g, "")));
                           }}
                           className={`p-2 rounded-lg border transition-all ${portfolioHoldings.some(h => h.ticker === stock.ticker)
                             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
@@ -977,9 +1055,36 @@ export default function DashboardV3() {
                 {/* Watchlist & Weights */}
                 <div className="lg:col-span-2 flex flex-col gap-6">
                   <div className="glass-premium rounded-[2.5rem] border-white/5 overflow-hidden">
-                    <div className="p-8 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
-                      <h2 className="font-bold text-xl text-white tracking-tight">Active Holdings ({portfolioHoldings.length})</h2>
-                      <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Total Weight: {portfolioHoldings.reduce((acc, h) => acc + h.weight, 0)}%</div>
+                    <div className="p-8 border-b border-white/5 bg-white/[0.02]">
+                      <div className="flex justify-between items-center mb-6">
+                        <h2 className="font-bold text-xl text-white tracking-tight">Active Holdings ({portfolioHoldings.length})</h2>
+                        <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full border border-white/10">
+                          Total Weight: <span className={portfolioHoldings.reduce((acc, h) => acc + h.weight, 0) === 100 ? 'text-emerald-400' : 'text-orange-400'}>{portfolioHoldings.reduce((acc, h) => acc + h.weight, 0)}%</span>
+                        </div>
+                      </div>
+
+                      {/* Simulated Portfolios */}
+                      <div className="flex flex-col gap-3 p-5 rounded-2xl bg-black/20 border border-white/5">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Cpu size={14} className="text-blue-500" />
+                          <span className="text-xs font-black text-gray-300 uppercase tracking-widest">Simulated Portfolios (模拟仓)</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <button onClick={() => applyModelPortfolio(AGGRESSIVE_GROWTH_PORTFOLIO)} className="px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all text-left group">
+                            <span className="block text-sm font-bold text-white group-hover:text-blue-400">Aggressive Growth</span>
+                            <span className="block text-[10px] text-gray-500 uppercase tracking-widest mt-1 hidden lg:block">High Beta AI & Semi</span>
+                          </button>
+                          <button onClick={() => applyModelPortfolio(GROWTH_PORTFOLIO)} className="px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all text-left group">
+                            <span className="block text-sm font-bold text-white group-hover:text-blue-400">Growth</span>
+                            <span className="block text-[10px] text-gray-500 uppercase tracking-widest mt-1 hidden lg:block">Stable Large-Cap Tech</span>
+                          </button>
+                          <button onClick={() => applyModelPortfolio(BALANCED_PORTFOLIO)} className="px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all text-left group">
+                            <span className="block text-sm font-bold text-white group-hover:text-blue-400">Balanced</span>
+                            <span className="block text-[10px] text-gray-500 uppercase tracking-widest mt-1 hidden lg:block">Diversified Blue Chip</span>
+                          </button>
+                        </div>
+                      </div>
+
                     </div>
                     <div className="p-6 flex flex-col gap-4">
                       {portfolioHoldings.length === 0 ? (
@@ -1018,14 +1123,28 @@ export default function DashboardV3() {
                                 <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Rebalance Weight</span>
                                 <span className="text-sm font-mono text-white font-bold">{stock.weight}%</span>
                               </div>
-                              <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={stock.weight}
-                                onChange={(e) => updateHoldingWeight(stock.ticker, parseInt(e.target.value))}
-                                className="w-full accent-blue-500 h-1 mt-2 appearance-none bg-white/10 rounded-full outline-none focus:bg-white/20 transition-all cursor-pointer"
-                              />
+                              <div className="flex items-center gap-3 mt-2">
+                                <button
+                                  onClick={() => updateHoldingWeight(stock.ticker, Math.max(0, stock.weight - 5))}
+                                  className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all font-bold"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={stock.weight}
+                                  onChange={(e) => updateHoldingWeight(stock.ticker, parseInt(e.target.value))}
+                                  className="w-full accent-blue-500 h-1 appearance-none bg-white/10 rounded-full outline-none focus:bg-white/20 transition-all cursor-pointer"
+                                />
+                                <button
+                                  onClick={() => updateHoldingWeight(stock.ticker, Math.min(100, stock.weight + 5))}
+                                  className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all font-bold"
+                                >
+                                  +
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))
@@ -1147,7 +1266,10 @@ export default function DashboardV3() {
 
               <div className="flex gap-4 items-center">
                 <button
-                  onClick={() => addToPortfolio(ticker, companyProfile?.name || ticker)}
+                  onClick={() => {
+                    const currentPrice = stockData && stockData.length > 0 ? stockData[stockData.length - 1].close : 150.00;
+                    addToPortfolio(ticker, companyProfile?.name || ticker, currentPrice);
+                  }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-[10px] font-black uppercase tracking-widest ${portfolioHoldings.some(h => h.ticker === ticker)
                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                     : 'bg-blue-600 border-blue-500 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20'
@@ -1269,11 +1391,17 @@ export default function DashboardV3() {
                 <div className="mb-6 relative z-10 flex flex-col gap-3">
                   <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase pl-1 border-l-2 border-blue-500">Company Analysis</h3>
                   <div className="flex bg-[#00000040] border border-[#ffffff10] rounded-xl p-1 overflow-x-auto hide-scrollbar touch-pan-x w-full">
-                    {['AI Forecast', 'Fundamentals', 'Business & Mgmt', 'Comparables'].map((tab) => (
+                    {['✨ Sales Copilot', 'Fundamentals', 'Business & Mgmt', 'Comparables'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab as any)}
-                        className={`text-xs px-3 py-2.5 rounded-lg whitespace-nowrap transition-all duration-300 font-medium tracking-wide flex-1 text-center ${activeTab === tab ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 border border-white/10' : 'text-gray-500 hover:text-gray-200 hover:bg-[#ffffff0a] border border-transparent'}`}
+                        className={`text-xs px-3 py-2.5 rounded-lg whitespace-nowrap transition-all duration-300 font-bold tracking-wide flex-1 text-center 
+                          ${tab === '✨ Sales Copilot' && activeTab !== tab ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' : ''}
+                          ${activeTab === tab
+                            ? tab === '✨ Sales Copilot'
+                              ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 border border-white/20'
+                              : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 border border-white/10'
+                            : 'text-gray-500 hover:text-gray-200 hover:bg-[#ffffff0a] border border-transparent'}`}
                       >
                         {tab}
                       </button>
@@ -1281,93 +1409,61 @@ export default function DashboardV3() {
                   </div>
                 </div>
 
-                {activeTab === 'AI Forecast' && (
-                  dateAnalysis ? (
-                    <>
-                      {/* Big Prediction Block */}
-                      <div className="flex items-center justify-between glass-premium border border-white/10 rounded-xl p-5 mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded flex items-center justify-center ${dateAnalysis.aiForecast.outlook === 'Bullish' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'}`}>
-                            {dateAnalysis.aiForecast.outlook === 'Bullish' ? <ArrowUp size={24} /> : <ArrowDown size={24} />}
-                          </div>
-                          <div>
-                            <div className="text-xs text-gray-500 font-semibold mb-1 tracking-wider uppercase">AI Forecast:</div>
-                            <div className={`text-2xl font-bold ${dateAnalysis.aiForecast.outlook === 'Bullish' ? 'text-emerald-500' : 'text-red-500'}`}>
-                              {dateAnalysis.aiForecast.outlook}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-3xl font-mono text-white font-light">
-                          {dateAnalysis.aiForecast.prob7D}
-                        </div>
-                      </div>
-
-                      {/* Rationale Text */}
-                      <div className="mb-6">
-                        <h4 className="text-xs font-bold text-gray-500 tracking-widest mb-2">ANALYSIS</h4>
-                        <div className="text-sm text-gray-300 leading-relaxed space-y-2">
-                          <p>
-                            <span className="text-blue-400 mr-1">•</span>
-                            {ticker} had {dateAnalysis.eventCategories.reduce((acc, cat) => acc + cat.count, 0)} related news articles in the past 7 days.
-                            Overall sentiment is {dateAnalysis.marketReaction.dayReturn.startsWith('-') ? 'leaning bearish' : 'leaning bullish'}.
-                            Short-term (T+1) model forecast is <span className={dateAnalysis.aiForecast.outlook === 'Bullish' ? 'text-emerald-400' : 'text-red-400'}>{dateAnalysis.aiForecast.outlook}</span>, with confidence <span className="font-bold">{dateAnalysis.aiForecast.prob7D}</span>.
-                          </p>
-                          <p>
-                            Historically, out of {dateAnalysis.historicalSimilarities.matchedEvents} similar periods,
-                            <span className={dateAnalysis.historicalSimilarities.winRateT5.startsWith('-') ? 'text-red-400' : 'text-emerald-400'}>{dateAnalysis.historicalSimilarities.winRateT5}</span> proceeded to {dateAnalysis.historicalSimilarities.avgT5Return.startsWith('-') ? 'decline' : 'advance'} over the subsequent 5 days, yielding a mean return of <span className="font-mono font-bold text-white">{dateAnalysis.historicalSimilarities.avgT5Return}</span>.
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Twin Table T+1 vs T+5 */}
-                      <div className="grid grid-cols-2 gap-4 mb-6">
-                        {/* T+1 Panel */}
-                        <div className="border border-gray-800 rounded flex flex-col overflow-hidden">
-                          <div className="p-2 border-b border-gray-800 flex justify-between items-center bg-[#111827]">
-                            <span className="text-xs font-semibold text-gray-300 tracking-wider">T+1 <ArrowUp size={12} className="inline text-emerald-500" /> UP</span>
-                            <span className="text-xs font-mono text-emerald-500">{dateAnalysis.historicalSimilarities.winRateT1}</span>
-                          </div>
-                          <div className="p-2 text-[10px] text-gray-500 font-mono space-y-1 bg-[#0a0e17]">
-                            <div className="flex justify-between"><span>Acc 53.6% / Base 53.6%</span></div>
-                            <div className="flex justify-between"><span>Lift +0.0pp</span></div>
-                            <div className="h-px bg-gray-800 my-1"></div>
-                            <div className="flex justify-between"><span>ret_10d</span><span className="text-gray-300">{dateAnalysis.historicalSimilarities.avgT1Return}</span></div>
-                          </div>
-                        </div>
-
-                        {/* T+5 Panel */}
-                        <div className="border border-gray-800 rounded flex flex-col overflow-hidden">
-                          <div className="p-2 border-b border-gray-800 flex justify-between items-center bg-[#111827]">
-                            <span className="text-xs font-semibold text-gray-300 tracking-wider">T+5 <ArrowUp size={12} className="inline text-emerald-500" /> UP</span>
-                            <span className="text-xs font-mono text-emerald-500">{dateAnalysis.historicalSimilarities.winRateT5}</span>
-                          </div>
-                          <div className="p-2 text-[10px] text-gray-500 font-mono space-y-1 bg-[#0a0e17]">
-                            <div className="flex justify-between"><span>Acc 61.8% / Base 51.8%</span></div>
-                            <div className="flex justify-between"><span>Lift +10.0pp</span></div>
-                            <div className="h-px bg-gray-800 my-1"></div>
-                            <div className="flex justify-between"><span>ret_10d</span><span className="text-gray-300">{dateAnalysis.historicalSimilarities.avgT5Return}</span></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Key Topics Pills */}
-                      <div>
-                        <h4 className="text-xs font-bold text-gray-500 tracking-widest mb-3 uppercase">KEY TOPICS</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {dateAnalysis.eventCategories.slice(0, 3).map(cat => cat.keywords).flat().map((kw, i) => (
-                            <span key={i} className="px-2 py-1 bg-[#111827] border border-gray-800 text-gray-400 text-xs rounded-full hover:text-gray-200 hover:border-gray-600 transition cursor-default">
-                              {kw}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="h-64 border border-dashed border-gray-800 rounded flex items-center justify-center text-gray-600">
-                      <span className="text-sm">Select a chart marker to generate AI Forecast</span>
+                {activeTab === '✨ Sales Copilot' && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex flex-col gap-3">
+                      <h4 className="text-sm font-black text-purple-400 tracking-widest uppercase border-b border-purple-500/20 pb-2 flex items-center gap-2">
+                        <Zap size={16} /> Analyst Report Generator
+                      </h4>
+                      <button
+                        onClick={() => generateCopilotContent('analyst_report')}
+                        disabled={isGeneratingCopilot}
+                        className="bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 text-purple-400 p-4 rounded-xl text-left transition relative overflow-hidden group disabled:opacity-50"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-purple-500/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        <div className="text-lg font-black mb-1">Generate Deep-Dive Analysis</div>
+                        <div className="text-xs text-purple-500/70 font-bold uppercase tracking-widest">Business Model • Catalysts • Valuation • Risks</div>
+                      </button>
                     </div>
-                  )
+
+                    {/* Output Area */}
+                    <div className="mt-8 relative">
+                      {isGeneratingCopilot && !copilotContent && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-2xl z-10 min-h-[200px] border border-white/5">
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="w-8 h-8 rounded-full border-2 border-purple-500 border-t-transparent animate-spin"></div>
+                            <div className="text-sm font-bold text-purple-400 animate-pulse tracking-widest uppercase">Synthesizing Alpha...</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {copilotContent && (
+                        <div className="bg-[#0a0e17] border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none"></div>
+                          <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none"></div>
+
+                          <div className="relative z-10 prose prose-invert max-w-none">
+                            <div className="text-lg leading-relaxed text-gray-200 font-medium whitespace-pre-wrap font-sans">
+                              {copilotContent.split('\n\n').map((paragraph, index) => {
+                                // Highlight headers/labels
+                                if (paragraph.startsWith('[')) {
+                                  return <h3 key={index} className="text-2xl font-black text-white mt-8 mb-4 uppercase tracking-tight border-b border-white/10 pb-2 drop-shadow-md">{paragraph.replace(/\[|\]/g, '')}</h3>;
+                                }
+                                // Normal text paragraph
+                                return <p key={index} className="mb-5 text-lg text-gray-200 leading-loose font-sans text-left">{paragraph}</p>;
+                              })}
+                            </div>
+                            {isGeneratingCopilot && (
+                              <span className="inline-block w-2 h-5 bg-purple-500 animate-pulse ml-1 align-middle"></span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
+
+                {/* AI Forecast Tab Removed as per user request */}
 
                 {activeTab === 'Fundamentals' && companyProfile && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1474,7 +1570,7 @@ export default function DashboardV3() {
                           key={i}
                           onClick={() => {
                             setTicker(comp.ticker);
-                            setActiveTab('AI Forecast');
+                            setActiveTab('Fundamentals');
                           }}
                           className="w-full text-left bg-[#111827] hover:bg-[#1f2937] border border-gray-800 hover:border-gray-600 rounded p-3 transition flex items-center justify-between group"
                         >
