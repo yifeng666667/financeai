@@ -23,6 +23,10 @@ import {
 } from 'lucide-react';
 
 const TradingChart = dynamic(() => import('../components/TradingChart'), { ssr: false });
+import RiskSparkline from '../components/RiskSparkline';
+import CorrelationHeatmap from '../components/CorrelationHeatmap';
+import VaRDistribution from '../components/VaRDistribution';
+import MacroNewsHub from '../components/MacroNewsHub';
 
 // Mock Sector Data with Industry details
 const SECTOR_DATA = [
@@ -164,13 +168,31 @@ interface RiskIndicator {
 
 
 
-const RISK_INDICATORS: RiskIndicator[] = [
-  { name: 'VIX Index', value: '14.2', change: '-2.1%', status: 'Bullish', description: 'Fear & Tail-Risk', insight: 'VIX is currently bottoming out, suggesting market complacency. While technically bullish for momentum, it increases the risk of a sharp correction if macro data surprises.' },
-  { name: 'Credit Spreads', value: '345bps', change: '+12bps', status: 'Neutral', description: 'TED/High Yield Spreads', insight: 'Spreads are widening slightly in the High Yield sector, indicating some liquidity stress in lower-tier corporate debt. Monitor for spillover into broader equity markets.' },
-  { name: 'Put/Call Ratio', value: '0.82', change: '+0.05', status: 'Neutral', description: 'Options Sentiment', insight: 'The ratio is in the neutral zone, neither showing extreme greed nor panic. Institutional positioning is balanced ahead of the next FOMC meeting.' },
-  { name: 'A/D Line', value: '+1,240', change: '+150', status: 'Bullish', description: 'Market Breadth', insight: 'Breadth is expanding, with more stocks hitting new 52-week highs than lows. This suggests the current rally is well-supported and not just driven by Mega-Cap tech.' },
-  { name: '10Y-2Y Spread', value: '-32bps', change: '+5bps', status: 'Bearish', description: 'Recession Warning', insight: 'The yield curve remains inverted, though the spread is narrowing (disinverting). Historically, disinversion after a long period of inversion is a more immediate signal of an impending economic slowdown.' },
-  { name: '200DMA Breadth', value: '64%', change: '-2%', status: 'Bullish', description: '% Stocks > 200DMA', insight: '64% of S&P 500 stocks are above their long-term average. This is healthy, providing a cushion for the index even if leading stocks take a breather.' },
+const RISK_INDICATORS: (RiskIndicator & { trendData: number[] })[] = [
+  { name: 'VIX Index', value: '14.2', change: '-2.1%', status: 'Bullish', description: 'Fear & Tail-Risk', insight: 'VIX is currently bottoming out, suggesting market complacency. While technically bullish for momentum, it increases the risk of a sharp correction if macro data surprises.', trendData: [18, 17, 19, 16, 15, 14.5, 14.2] },
+  { name: 'Credit Spreads', value: '345bps', change: '+12bps', status: 'Neutral', description: 'TED/High Yield Spreads', insight: 'Spreads are widening slightly in the High Yield sector, indicating some liquidity stress in lower-tier corporate debt. Monitor for spillover into broader equity markets.', trendData: [320, 325, 330, 328, 335, 340, 345] },
+  { name: 'Put/Call Ratio', value: '0.82', change: '+0.05', status: 'Neutral', description: 'Options Sentiment', insight: 'The ratio is in the neutral zone, neither showing extreme greed nor panic. Institutional positioning is balanced ahead of the next FOMC meeting.', trendData: [0.75, 0.78, 0.82, 0.80, 0.85, 0.83, 0.82] },
+  { name: 'A/D Line', value: '+1,240', change: '+150', status: 'Bullish', description: 'Market Breadth', insight: 'Breadth is expanding, with more stocks hitting new 52-week highs than lows. This suggests the current rally is well-supported and not just driven by Mega-Cap tech.', trendData: [800, 950, 1100, 1050, 1200, 1180, 1240] },
+  { name: '10Y-2Y Spread', value: '-32bps', change: '+5bps', status: 'Bearish', description: 'Recession Warning', insight: 'The yield curve remains inverted, though the spread is narrowing (disinverting). Historically, disinversion after a long period of inversion is a more immediate signal of an impending economic slowdown.', trendData: [-45, -42, -40, -38, -35, -34, -32] },
+  { name: '200DMA Breadth', value: '64%', change: '-2%', status: 'Bullish', description: '% Stocks > 200DMA', insight: '64% of S&P 500 stocks are above their long-term average. This is healthy, providing a cushion for the index even if leading stocks take a breather.', trendData: [58, 60, 62, 65, 68, 66, 64] },
+];
+
+const MARKET_RISK_NEWS = [
+  { title: "VIX hits multi-month lows as equity markets reach new highs", url: "https://finance.yahoo.com", source: "Yahoo Finance" },
+  { title: "Credit spreads widen as commercial real estate concerns mount", url: "https://www.cnbc.com", source: "CNBC" },
+  { title: "Options market signals cautious optimism ahead of inflation data", url: "https://www.wsj.com", source: "WSJ" }
+];
+
+const CORRELATION_NEWS = [
+  { title: "Tech-S&P 500 correlation reaches record levels in 2024", url: "https://finance.yahoo.com", source: "Yahoo Finance" },
+  { title: "Bitcoin decoupling from gold as digital asset adoption climbs", url: "https://www.bloomberg.com", source: "Bloomberg" },
+  { title: "Emerging markets show unexpected resilience against US dollar strength", url: "https://www.reuters.com", source: "Reuters" }
+];
+
+const VAR_NEWS = [
+  { title: "Hedge funds increase tail-risk protection as geo-political risks rise", url: "https://www.reuters.com", source: "Reuters" },
+  { title: "VaR models under fire as market volatility patterns shift", url: "https://www.ft.com", source: "Financial Times" },
+  { title: "Black Swan hedging strategies see record inflows this quarter", url: "https://www.wsj.com", source: "WSJ" }
 ];
 
 const CORRELATION_DATA = [
@@ -789,12 +811,17 @@ export default function DashboardV3() {
                           }`}>{indicator.status}</span>
                       </div>
                       <h3 className="text-xl font-black text-white mb-1">{indicator.name}</h3>
-                      <div className="flex items-baseline gap-2">
+                      <div className="flex items-baseline gap-2 mb-4">
                         <span className="text-3xl font-mono font-black text-white">{indicator.value}</span>
                         <span className={`text-sm font-bold ${indicator.change.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}`}>{indicator.change}</span>
                       </div>
+
+                      {/* Trend Sparkline */}
+                      <div className="mb-4 bg-white/5 rounded-xl p-2 border border-white/5">
+                        <RiskSparkline data={indicator.trendData} color={indicator.status === 'Bullish' ? '#10b981' : indicator.status === 'Bearish' ? '#ef4444' : '#3b82f6'} />
+                      </div>
                     </div>
-                    <div className="mt-6 pt-4 border-t border-white/5">
+                    <div className="mt-2 pt-4 border-t border-white/5">
                       <div className="flex items-start gap-2 bg-white/5 p-3 rounded-xl border border-white/5">
                         <Cpu size={14} className="text-blue-500 mt-0.5" />
                         <p className="text-[11px] leading-relaxed text-gray-400 italic">"{indicator.insight}"</p>
@@ -804,10 +831,62 @@ export default function DashboardV3() {
                 ))}
               </div>
 
+              {/* LIVE MARKET NEWS SECTION */}
+              <div className="glass-premium p-8 rounded-[2.5rem] border-white/5">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
+                      <Activity size={24} />
+                    </div>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Geopolitical Analysis</h2>
+                  </div>
+                  <div className="text-xs font-black text-gray-500 uppercase tracking-widest mb-1">3 Relevant Articles per Section</div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-black text-blue-400 uppercase tracking-widest border-b border-white/10 pb-3 mb-4">Global Risk Factor</h4>
+                    {MARKET_RISK_NEWS.map((news, i) => (
+                      <a key={i} href={news.url} target="_blank" rel="noopener noreferrer" className="block p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 hover:border-blue-500/30 transition-all group shadow-lg">
+                        <div className="text-sm font-bold text-gray-200 group-hover:text-blue-400 line-clamp-3 mb-3 leading-relaxed">{news.title}</div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-[10px] text-gray-500 font-black uppercase tracking-wider">{news.source}</div>
+                          <div className="text-[10px] text-blue-500/70 font-bold opacity-0 group-hover:opacity-100 transition-opacity">Read Analysis →</div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-black text-purple-400 uppercase tracking-widest border-b border-white/10 pb-3 mb-4">Correlation Analysis</h4>
+                    {CORRELATION_NEWS.map((news, i) => (
+                      <a key={i} href={news.url} target="_blank" rel="noopener noreferrer" className="block p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 hover:border-purple-500/30 transition-all group shadow-lg">
+                        <div className="text-sm font-bold text-gray-200 group-hover:text-purple-400 line-clamp-3 mb-3 leading-relaxed">{news.title}</div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-[10px] text-gray-500 font-black uppercase tracking-wider">{news.source}</div>
+                          <div className="text-[10px] text-purple-500/70 font-bold opacity-0 group-hover:opacity-100 transition-opacity">Read Analysis →</div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-black text-emerald-400 uppercase tracking-widest border-b border-white/10 pb-3 mb-4">Tail-Risk Research</h4>
+                    {VAR_NEWS.map((news, i) => (
+                      <a key={i} href={news.url} target="_blank" rel="noopener noreferrer" className="block p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition-all group shadow-lg">
+                        <div className="text-sm font-bold text-gray-200 group-hover:text-emerald-400 line-clamp-3 mb-3 leading-relaxed">{news.title}</div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-[10px] text-gray-500 font-black uppercase tracking-wider">{news.source}</div>
+                          <div className="text-[10px] text-emerald-500/70 font-bold opacity-0 group-hover:opacity-100 transition-opacity">Read Analysis →</div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               {/* Research Sections: Correlation & VaR */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
                 {/* Correlation Matrix */}
-                <div className="glass-premium p-8 rounded-[2.5rem] border-white/5">
+                <div className="glass-premium p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden">
+                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-purple-500/5 blur-[60px]"></div>
                   <div className="flex items-center gap-3 mb-8">
                     <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
                       <TrendingUp size={20} />
@@ -815,25 +894,8 @@ export default function DashboardV3() {
                     <h2 className="text-xl font-black text-white uppercase tracking-tight">Correlation Matrix Analysis</h2>
                   </div>
 
-                  <div className="space-y-4 mb-8">
-                    {CORRELATION_DATA.map((item, i) => (
-                      <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all">
-                        <div className="flex -space-x-2">
-                          <div className="w-8 h-8 rounded-full bg-blue-600 border-2 border-[#0a0e17] flex items-center justify-center text-[10px] font-black">{item.pair[0].charAt(0)}</div>
-                          <div className="w-8 h-8 rounded-full bg-purple-600 border-2 border-[#0a0e17] flex items-center justify-center text-[10px] font-black">{item.pair[1].charAt(0)}</div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-bold text-gray-200">{item.pair[0]} ↔ {item.pair[1]}</div>
-                          <div className="text-[10px] text-gray-500 font-bold uppercase">{item.trend} Coupling</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xl font-mono font-black text-white">{(item.value * 100).toFixed(0)}%</div>
-                          <div className="h-1 w-16 bg-white/10 rounded-full mt-1 overflow-hidden">
-                            <div className="h-full bg-purple-500" style={{ width: `${item.value * 100}%` }}></div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="mb-8 p-4 bg-black/40 border border-white/5 rounded-[2rem]">
+                    <CorrelationHeatmap data={CORRELATION_DATA} />
                   </div>
 
                   <div className="p-5 bg-purple-500/5 rounded-2xl border border-purple-500/20">
@@ -848,7 +910,8 @@ export default function DashboardV3() {
                 </div>
 
                 {/* VaR Analysis */}
-                <div className="glass-premium p-8 rounded-[2.5rem] border-white/5 flex flex-col justify-between">
+                <div className="glass-premium p-8 rounded-[2.5rem] border-white/5 flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-emerald-500/5 blur-[60px]"></div>
                   <div>
                     <div className="flex items-center gap-3 mb-8">
                       <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
@@ -857,17 +920,14 @@ export default function DashboardV3() {
                       <h2 className="text-xl font-black text-white uppercase tracking-tight">VaR Research & Stress Test</h2>
                     </div>
 
-                    <div className="bg-black/40 border border-white/10 p-8 rounded-3xl mb-8 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={64} /></div>
-                      <div className="text-[11px] text-gray-500 font-black uppercase tracking-widest mb-2">{VAR_RESEARCH.description}</div>
-                      <div className="text-5xl font-mono font-black text-emerald-400 mb-4">{VAR_RESEARCH.currentVaR}</div>
-                      <div className="text-sm text-gray-400 font-medium">Daily Value at Risk (VaR)</div>
+                    <div className="bg-black/40 border border-white/10 p-6 rounded-3xl mb-8 relative overflow-hidden">
+                      <VaRDistribution confidence={95} varValue={VAR_RESEARCH.currentVaR} expectedShortfall="4.12%" />
                     </div>
 
                     <div className="space-y-6">
                       <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                        <div className="text-xs text-gray-400">Stress Scenario</div>
-                        <div className="text-sm font-black text-red-400 uppercase">{VAR_RESEARCH.stressScenario}</div>
+                        <div className="text-xs text-gray-400 font-bold uppercase tracking-widest">Stress Scenario</div>
+                        <div className="text-sm font-black text-red-500 uppercase tracking-tighter shadow-sm">{VAR_RESEARCH.stressScenario}</div>
                       </div>
                     </div>
                   </div>
@@ -888,6 +948,12 @@ export default function DashboardV3() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Global Macro News Hub */}
+              <div className="glass-premium p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden mb-12">
+                <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-indigo-500/5 blur-[80px]"></div>
+                <MacroNewsHub />
               </div>
             </div>
           </div>
