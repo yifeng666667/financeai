@@ -14,27 +14,31 @@ export async function POST(req: NextRequest) {
 
     // Generate highly realistic, "human" structured Analyst Reports.
     if (type === 'analyst_report') {
-        contentToStream = `[Executive Summary & Investment Thesis]
+        contentToStream = `### Executive Summary & Investment Thesis
+* **Business Model**: \${ticker} operates a high-margin, sticky software ecosystem and infrastructure platform. The core offerings act as a funnel for enterprise clients, boasting a 114% Net Retention Rate (NRR).
+* **Revenue Drivers**: Transitioning aggressively to a consumption-based pricing model, aligning long-term secular growth with immediate free cash flow generation.
+* **Competitive Advantage**: An impregnable moat underpinned by high switching costs and mission-critical enterprise integration, driving projected 300bps gross margin expansion over the next 8 quarters.
 
-We initiate coverage on \${ticker} with a conviction BUY rating and establish a 12-month base-case price target representing an asymmetric 18.5% upside. \${ticker} occupies an impregnable competitive moat within itsTAM (Total Addressable Market), underpinned by high switching costs and mission-critical enterprise integration. We model a 300bps gross margin expansion over the next 8 quarters, largely ignored by consensus, driven by a structural shift toward higher-margin software and services revenue.
+### Near-Term Catalysts
+* **Product Cycle Super-cycle**: Impending H2 launch expected to drive accelerated replacements among Fortune 500, potentially generating a $2.4B top-line beat in FY25.
+* **Accretive M&A Integration**: Recent strategic acquisitions fill critical AI infrastructure gaps, locking out mid-tier competitors and establishing a pricing umbrella.
+* **Capital Allocation**: With leverage below 1.2x Net Debt/EBITDA, anticipation of a highly accretive $15B accelerated share repurchase (ASR) program before year-end.
 
-[Business Model & Structural Advantages]
+### Valuation Framework
 
-\${ticker}'s economic engine represents a textbook 'flywheel' dynamic. The core infrastructure solutions serve as a loss-leader, funneling enterprise clients into a high-margin, sticky software ecosystem. Retention rates currently sit at an industry-leading 114% NRR (Net Retention Rate). Management's aggressive transition to a consumption-based pricing model aligns long-term secular growth with immediate free cash flow (FCF) generation.
+| Metric | Value | Peer Median | Implied Premium/Discount |
+| :--- | :--- | :--- | :--- |
+| **EV/NTM EBITDA** | 22.0x | 25.5x | -13.7% |
+| **P/E (Forward)** | 28.5x | 31.0x | -8.0% |
+| **PEG Ratio** | 1.1x | 1.8x | -38.8% |
+| **FCF Yield** | 4.2% | 3.1% | +35.4% |
 
-[Near-Term Catalysts]
+*Target Price derived from 10-year DCF (WACC: 8.2%, TGR: 2.5%) and multiple analysis.*
 
-1. Product Cycle Super-cycle: The impending H2 launch is expected to drive an accelerated replacement wave among Fortune 500 constituents. We estimate this could drive a $2.4B top-line beat against street estimates in FY25.
-2. Accretive M&A Integration: The recent strategic acquisition fills critical gaps in their AI infrastructure stack, effectively locking out mid-tier competitors and establishing a pricing umbrella.
-3. Capital Allocation Pivot: With leverage comfortably below 1.2x Net Debt/EBITDA, we anticipate management will authorize a highly accretive $15B accelerated share repurchase (ASR) program before year-end.
-
-[Valuation Framework]
-
-Our price target is derived from a blended valuation methodology incorporating a 10-year DCF (WACC: 8.2%, TGR: 2.5%) and a 22x EV/NTM EBITDA multiple, which represents a 15% discount to its historical 5-year median, adjusting for normalized interest rates. On a PEG ratio basis (1.1x), \${ticker} trades at a steep discount to large-cap tech peers, providing a substantial margin of safety.
-
-[Key Risks & Mitigants]
-
-The primary downside risk involves acute supply-chain concentration in the APAC region, exposing the firm to geopolitical friction. However, management's recent CAPEX guidance indicates aggressive near-shoring efforts that should fully diversify assembly dependency by late 2026. A secondary risk is prolonged macro-economic softening impacting enterprise IT budgets, though \${ticker}'s mission-critical nature typically commands priority allocation during budget consolidations.`;
+### Key Risks & Mitigants
+* **Internal Risk**: Execution delays in the consumption-pricing transition could temporally compress top-line growth. Management's conservative Q3 guidance attempts to de-risk this transition phase.
+* **External Competition**: Aggressive pricing strategies from hyperscaler disruptors. However, \${ticker}'s mission-critical stickiness prevents rapid churn.
+* **Macro Conditions**: Acute supply-chain concentration in APAC or prolonged enterprise IT budget softening. CAPEX guidance indicates aggressive near-shoring to fully diversify assembly by late 2026.`;
     } else {
         contentToStream = "Invalid request type.";
     }
