@@ -1121,7 +1121,9 @@ export default function DashboardV3() {
                             <div className="flex flex-col gap-3">
                               <div className="flex justify-between items-center px-1">
                                 <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Rebalance Weight</span>
-                                <span className="text-sm font-mono text-white font-bold">{stock.weight}%</span>
+                                <span className="text-sm font-mono text-white font-bold">
+                                  {stock.weight}% <span className="text-gray-500 font-medium ml-1 text-xs">• ${(1000000 * (stock.weight / 100)).toLocaleString()}</span>
+                                </span>
                               </div>
                               <div className="flex items-center gap-3 mt-2">
                                 <button
@@ -1183,7 +1185,7 @@ export default function DashboardV3() {
                     <div className="flex flex-col gap-6 mb-8">
                       <div className="bg-black/40 border border-white/5 p-6 rounded-[2rem]">
                         <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Total Market Value</div>
-                        <div className="text-3xl font-mono text-white font-black">${(portfolioHoldings.reduce((acc, h) => acc + (h.price * h.weight * 10), 0)).toLocaleString()}</div>
+                        <div className="text-3xl font-mono text-white font-black">$1,000,000</div>
                         <div className="text-xs text-emerald-400 font-bold mt-1">+12.4% (Calculated Estimate)</div>
                       </div>
 
@@ -1219,7 +1221,9 @@ export default function DashboardV3() {
                               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: h.color }}></div>
                               <span className="text-[10px] text-gray-300 font-bold uppercase tracking-tight">{h.ticker}</span>
                             </div>
-                            <span className="text-[10px] font-mono text-gray-500 font-black">{h.weight}%</span>
+                            <span className="text-[10px] font-mono text-gray-500 font-black">
+                              {h.weight}% <span className="text-gray-600 font-bold ml-1">• ${(1000000 * (h.weight / 100)).toLocaleString()}</span>
+                            </span>
                           </div>
                         ))}
                       </div>
