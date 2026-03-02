@@ -26,6 +26,7 @@ const TradingChart = dynamic(() => import('../components/TradingChart'), { ssr: 
 import RiskSparkline from '../components/RiskSparkline';
 import CorrelationHeatmap from '../components/CorrelationHeatmap';
 import VaRDistribution from '../components/VaRDistribution';
+import CompanyRadarScorecard from '../components/CompanyRadarScorecard';
 import MacroNewsHub from '../components/MacroNewsHub';
 
 // Mock Sector Data with Industry details
@@ -279,6 +280,44 @@ const BALANCED_PORTFOLIO = [
   { ticker: 'BRK.B', name: 'Berkshire Hathaway', price: 410.20, change: 0, weight: 10, color: 'hsl(280, 50%, 40%)' },
 ];
 
+const MOCK_SCORECARDS: Record<string, { data: { Value: number, Growth: number, Quality: number, Momentum: number, Volatility: number }, bullCase: string[], bearCase: string[] }> = {
+  'NVDA': {
+    data: { Value: 15, Growth: 98, Quality: 85, Momentum: 95, Volatility: 30 },
+    bullCase: ['AI GPU demand continues to outpace supply through 2026', 'Data center revenue grew 400% YoY with gross margins expanding', 'CUDA software ecosystem creates insurmountable hardware moat'],
+    bearCase: ['P/E ratio extremely stretched leaving no room for execution errors', 'Sovereign AI spending might pull forward future demand', 'Custom silicon (ASICs) from hyperscalers threatening market share']
+  },
+  'AAPL': {
+    data: { Value: 45, Growth: 35, Quality: 95, Momentum: 60, Volatility: 80 },
+    bullCase: ['Services segment growing steadily with >70% gross margins', 'Massive installed base of 2B+ active devices globally', 'Unmatched free cash flow generation and aggressive buybacks'],
+    bearCase: ['iPhone upgrade cycles are lengthening significantly', 'Regulatory pressures globally targeting App Store fees', 'Lagging behind peers in generative AI feature rollout']
+  },
+  'AMD': {
+    data: { Value: 25, Growth: 85, Quality: 70, Momentum: 80, Volatility: 40 },
+    bullCase: ['MI300X gaining traction as a viable alternative to NVIDIA', 'Continued market share capture from Intel in Server CPU (EPYC)', 'Improving gross margins via product mix shift'],
+    bearCase: ['PC recovery remains slower than anticipated', 'Still functionally far behind NVDA in software stack (ROCm)', 'Gaming segment revenue contracting dramatically']
+  },
+  'MSFT': {
+    data: { Value: 35, Growth: 70, Quality: 98, Momentum: 75, Volatility: 70 },
+    bullCase: ['Copilot monetization accelerating across M365 user base', 'Azure cloud growth re-accelerating due to AI workloads', 'Strongest balance sheet in tech with AAA rating'],
+    bearCase: ['OpenAI partnership structure poses long-term IP risks', 'Capital expenditure for AI datacenters expanding rapidly', 'Valuation commands historically high premium']
+  },
+  'TSLA': {
+    data: { Value: 20, Growth: 40, Quality: 50, Momentum: 30, Volatility: 15 },
+    bullCase: ['FSD v12 showing step-change improvements in autonomy', 'Energy storage deployment growing at 100%+ YoY', 'Next-Gen unboxed manufacturing to drastically cut COGS'],
+    bearCase: ['EV demand structurally slowing globally', 'Relentless price cuts destroying operating margins', 'Fierce competition from BYD and Chinese domestic EV makers']
+  },
+  'PLTR': {
+    data: { Value: 10, Growth: 55, Quality: 75, Momentum: 90, Volatility: 20 },
+    bullCase: ['AIP bootcamp strategy driving unprecedented commercial adoption', 'US Government defense spending providing extremely sticky revenue', 'Achieved consistent GAAP profitability signaling maturity'],
+    bearCase: ['Lumpy government contract cycles make revenue hard to model', 'Valuation >20x Price-to-Sales is priced for perfection', 'SBC (Stock-Based Compensation) still relatively high']
+  },
+  'DEFAULT': {
+    data: { Value: 50, Growth: 50, Quality: 60, Momentum: 50, Volatility: 50 },
+    bullCase: ['Solid market position with stable recurring revenue base', 'Recent cost-cutting measures improving operating margins'],
+    bearCase: ['Macroeconomic headwinds affecting broader industry spend', 'Valuation appears fully priced given standard growth trajectory']
+  }
+};
+
 export default function DashboardV3() {
   const [activeStressIndex, setActiveStressIndex] = useState(0);
   const { user, loading, signInWithGoogle, logout } = useAuth();
@@ -295,7 +334,7 @@ export default function DashboardV3() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [dateAnalysis, setDateAnalysis] = useState<AIAnalysis | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'AI Forecast' | 'Fundamentals' | 'Business & Mgmt' | 'Comparables' | '✨ Sales Copilot'>('✨ Sales Copilot');
+  const [activeTab, setActiveTab] = useState<'Fundamentals' | 'Business & Mgmt' | 'Comparables' | '🎯 Factor Scorecard'>('🎯 Factor Scorecard');
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
 
   // AI Sales Copilot States
@@ -509,7 +548,7 @@ export default function DashboardV3() {
   const generateCopilotContent = async (type: 'pitch' | 'objection' | 'analyst_report', audience?: 'Hedge Fund' | 'Long-Only') => {
     setIsGeneratingCopilot(true);
     setCopilotContent('');
-    setActiveTab('✨ Sales Copilot');
+    setActiveTab('🎯 Factor Scorecard');
 
     try {
       const response = await fetch('/api/copilot', {
@@ -1045,8 +1084,8 @@ export default function DashboardV3() {
                             key={scenario.id}
                             onClick={() => setActiveStressIndex(index)}
                             className={`px-4 py-3 rounded-xl border text-left transition-all flex justify-between items-center ${activeStressIndex === index
-                                ? 'bg-red-500/10 border-red-500/30 ring-1 ring-red-500/50'
-                                : 'bg-white/5 border-white/5 hover:bg-white/10'
+                              ? 'bg-red-500/10 border-red-500/30 ring-1 ring-red-500/50'
+                              : 'bg-white/5 border-white/5 hover:bg-white/10'
                               }`}
                           >
                             <div className={`text-sm font-bold ${activeStressIndex === index ? 'text-white' : 'text-gray-400'}`}>
@@ -1444,15 +1483,15 @@ export default function DashboardV3() {
                 <div className="mb-6 relative z-10 flex flex-col gap-3">
                   <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase pl-1 border-l-2 border-blue-500">Company Analysis</h3>
                   <div className="flex bg-[#00000040] border border-[#ffffff10] rounded-xl p-1 overflow-x-auto hide-scrollbar touch-pan-x w-full">
-                    {['✨ Sales Copilot', 'Fundamentals', 'Business & Mgmt', 'Comparables'].map((tab) => (
+                    {['🎯 Factor Scorecard', 'Fundamentals', 'Business & Mgmt', 'Comparables'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab as any)}
                         className={`text-xs px-3 py-2.5 rounded-lg whitespace-nowrap transition-all duration-300 font-bold tracking-wide flex-1 text-center 
-                          ${tab === '✨ Sales Copilot' && activeTab !== tab ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' : ''}
+                          ${tab === '🎯 Factor Scorecard' && activeTab !== tab ? 'text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10' : ''}
                           ${activeTab === tab
-                            ? tab === '✨ Sales Copilot'
-                              ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 border border-white/20'
+                            ? tab === '🎯 Factor Scorecard'
+                              ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/30 border border-white/20'
                               : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 border border-white/10'
                             : 'text-gray-500 hover:text-gray-200 hover:bg-[#ffffff0a] border border-transparent'}`}
                       >
@@ -1462,57 +1501,14 @@ export default function DashboardV3() {
                   </div>
                 </div>
 
-                {activeTab === '✨ Sales Copilot' && (
+                {activeTab === '🎯 Factor Scorecard' && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex flex-col gap-3">
-                      <h4 className="text-sm font-black text-purple-400 tracking-widest uppercase border-b border-purple-500/20 pb-2 flex items-center gap-2">
-                        <Zap size={16} /> Analyst Report Generator
-                      </h4>
-                      <button
-                        onClick={() => generateCopilotContent('analyst_report')}
-                        disabled={isGeneratingCopilot}
-                        className="bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 text-purple-400 p-4 rounded-xl text-left transition relative overflow-hidden group disabled:opacity-50"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-purple-500/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                        <div className="text-lg font-black mb-1">Generate Deep-Dive Analysis</div>
-                        <div className="text-xs text-purple-500/70 font-bold uppercase tracking-widest">Business Model • Catalysts • Valuation • Risks</div>
-                      </button>
-                    </div>
-
-                    {/* Output Area */}
-                    <div className="mt-8 relative">
-                      {isGeneratingCopilot && !copilotContent && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-2xl z-10 min-h-[200px] border border-white/5">
-                          <div className="flex flex-col items-center gap-4">
-                            <div className="w-8 h-8 rounded-full border-2 border-purple-500 border-t-transparent animate-spin"></div>
-                            <div className="text-sm font-bold text-purple-400 animate-pulse tracking-widest uppercase">Synthesizing Alpha...</div>
-                          </div>
-                        </div>
-                      )}
-
-                      {copilotContent && (
-                        <div className="bg-[#0a0e17] border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none"></div>
-                          <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none"></div>
-
-                          <div className="relative z-10 prose prose-invert max-w-none">
-                            <div className="text-lg leading-relaxed text-gray-200 font-medium whitespace-pre-wrap font-sans">
-                              {copilotContent.split('\n\n').map((paragraph, index) => {
-                                // Highlight headers/labels
-                                if (paragraph.startsWith('[')) {
-                                  return <h3 key={index} className="text-2xl font-black text-white mt-8 mb-4 uppercase tracking-tight border-b border-white/10 pb-2 drop-shadow-md">{paragraph.replace(/\[|\]/g, '')}</h3>;
-                                }
-                                // Normal text paragraph
-                                return <p key={index} className="mb-5 text-lg text-gray-200 leading-loose font-sans text-left">{paragraph}</p>;
-                              })}
-                            </div>
-                            {isGeneratingCopilot && (
-                              <span className="inline-block w-2 h-5 bg-purple-500 animate-pulse ml-1 align-middle"></span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <CompanyRadarScorecard
+                      symbol={ticker}
+                      data={MOCK_SCORECARDS[ticker]?.data || MOCK_SCORECARDS['DEFAULT'].data}
+                      bullCase={MOCK_SCORECARDS[ticker]?.bullCase || MOCK_SCORECARDS['DEFAULT'].bullCase}
+                      bearCase={MOCK_SCORECARDS[ticker]?.bearCase || MOCK_SCORECARDS['DEFAULT'].bearCase}
+                    />
                   </div>
                 )}
 
