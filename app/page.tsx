@@ -334,7 +334,7 @@ export default function DashboardV3() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [dateAnalysis, setDateAnalysis] = useState<AIAnalysis | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'Fundamentals' | 'Business & Mgmt' | 'Comparables' | '🎯 Factor Scorecard'>('🎯 Factor Scorecard');
+  const [activeTab, setActiveTab] = useState<'Fundamentals' | 'Business & Mgmt' | 'Comparables' | '📋 Overview'>('📋 Overview');
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
 
   // AI Sales Copilot States
@@ -548,7 +548,7 @@ export default function DashboardV3() {
   const generateCopilotContent = async (type: 'pitch' | 'objection' | 'analyst_report', audience?: 'Hedge Fund' | 'Long-Only') => {
     setIsGeneratingCopilot(true);
     setCopilotContent('');
-    setActiveTab('🎯 Factor Scorecard');
+    setActiveTab('📋 Overview');
 
     try {
       const response = await fetch('/api/copilot', {
@@ -1272,9 +1272,23 @@ export default function DashboardV3() {
 
                     <div className="flex flex-col gap-6 mb-8">
                       <div className="bg-black/40 border border-white/5 p-6 rounded-[2rem]">
-                        <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Total Market Value</div>
-                        <div className="text-3xl font-mono text-white font-black">$1,000,000</div>
-                        <div className="text-xs text-emerald-400 font-bold mt-1">+12.4% (Calculated Estimate)</div>
+                        <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Portfolio Holdings</div>
+                        <div className="text-3xl font-mono text-white font-black">
+                          {portfolioHoldings.length > 0 ? `${portfolioHoldings.length} Positions` : '—'}
+                        </div>
+                        {(() => {
+                          if (portfolioHoldings.length === 0) return null;
+                          const totalWeight = portfolioHoldings.reduce((sum, h) => sum + (h.weight || 0), 0);
+                          const weightedReturn = totalWeight > 0
+                            ? portfolioHoldings.reduce((sum, h) => sum + ((h.change || 0) * (h.weight || 0) / totalWeight), 0)
+                            : portfolioHoldings.reduce((sum, h) => sum + (h.change || 0), 0) / portfolioHoldings.length;
+                          const isPositive = weightedReturn >= 0;
+                          return (
+                            <div className={`text-xs font-bold mt-1 ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {isPositive ? '+' : ''}{weightedReturn.toFixed(2)}% Weighted Daily Return
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <div className="space-y-4">
@@ -1483,15 +1497,15 @@ export default function DashboardV3() {
                 <div className="mb-6 relative z-10 flex flex-col gap-3">
                   <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase pl-1 border-l-2 border-blue-500">Company Analysis</h3>
                   <div className="flex bg-[#00000040] border border-[#ffffff10] rounded-xl p-1 overflow-x-auto hide-scrollbar touch-pan-x w-full">
-                    {['🎯 Factor Scorecard', 'Fundamentals', 'Business & Mgmt', 'Comparables'].map((tab) => (
+                    {['📋 Overview', 'Fundamentals', 'Business & Mgmt', 'Comparables'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab as any)}
                         className={`text-xs px-3 py-2.5 rounded-lg whitespace-nowrap transition-all duration-300 font-bold tracking-wide flex-1 text-center 
-                          ${tab === '🎯 Factor Scorecard' && activeTab !== tab ? 'text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10' : ''}
+                          ${tab === '📋 Overview' && activeTab !== tab ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/10' : ''}
                           ${activeTab === tab
-                            ? tab === '🎯 Factor Scorecard'
-                              ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/30 border border-white/20'
+                            ? tab === '📋 Overview'
+                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 border border-white/20'
                               : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 border border-white/10'
                             : 'text-gray-500 hover:text-gray-200 hover:bg-[#ffffff0a] border border-transparent'}`}
                       >
@@ -1501,14 +1515,88 @@ export default function DashboardV3() {
                   </div>
                 </div>
 
-                {activeTab === '🎯 Factor Scorecard' && (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <CompanyRadarScorecard
-                      symbol={ticker}
-                      data={MOCK_SCORECARDS[ticker]?.data || MOCK_SCORECARDS['DEFAULT'].data}
-                      bullCase={MOCK_SCORECARDS[ticker]?.bullCase || MOCK_SCORECARDS['DEFAULT'].bullCase}
-                      bearCase={MOCK_SCORECARDS[ticker]?.bearCase || MOCK_SCORECARDS['DEFAULT'].bearCase}
-                    />
+                {activeTab === '📋 Overview' && (
+                  <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {!companyProfile ? (
+                      <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-600">
+                        <div className="w-7 h-7 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
+                        <span className="text-sm">Loading company data...</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Company blurb */}
+                        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 space-y-3">
+                          <p className="text-sm text-gray-200 leading-relaxed">{companyProfile.businessModel}</p>
+                          <div className="w-full h-px bg-white/[0.06]"></div>
+                          <p className="text-xs text-gray-400 leading-relaxed">{companyProfile.profitability}</p>
+                        </div>
+
+                        {/* Key metrics grid */}
+                        <div>
+                          <h4 className="text-[10px] font-black text-gray-500 tracking-widest uppercase mb-3">Key Metrics</h4>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { label: 'P/E', value: companyProfile.valuation.pe, color: 'text-white' },
+                              { label: 'P/B', value: companyProfile.valuation.pb, color: 'text-white' },
+                              { label: 'PEG', value: companyProfile.valuation.peg, color: 'text-white' },
+                              { label: 'Gross Margin', value: companyProfile.fundamentals.grossMargin, color: 'text-emerald-400' },
+                              { label: 'Net Margin', value: companyProfile.fundamentals.netMargin, color: 'text-emerald-400' },
+                              { label: 'ROE', value: companyProfile.fundamentals.roe, color: 'text-blue-400' },
+                              { label: 'Rev. Growth', value: companyProfile.fundamentals.revenueGrowth, color: 'text-blue-400' },
+                              { label: 'Op. Margin', value: companyProfile.fundamentals.operatingMargin, color: 'text-emerald-400' },
+                              { label: 'Debt/Equity', value: companyProfile.fundamentals.debtToEquity, color: 'text-orange-400' },
+                            ].map((m, i) => (
+                              <div key={i} className="bg-[#0d1117] border border-white/[0.06] rounded-lg p-2.5 flex flex-col gap-1">
+                                <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">{m.label}</span>
+                                <span className={`text-sm font-mono font-bold ${m.color}`}>{m.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Valuation status + DCF */}
+                        <div className="flex items-center gap-3 bg-white/[0.03] border border-white/[0.07] rounded-xl px-4 py-3">
+                          <div className="flex-1">
+                            <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Valuation</div>
+                            <div className={`text-sm font-black ${companyProfile.valuation.status === 'Undervalued' ? 'text-emerald-400' :
+                              companyProfile.valuation.status === 'Overvalued' ? 'text-red-400' : 'text-yellow-400'
+                              }`}>{companyProfile.valuation.status}</div>
+                          </div>
+                          <div className="w-px h-8 bg-white/10"></div>
+                          <div className="flex-1 text-right">
+                            <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">DCF Fair Value</div>
+                            <div className="text-sm font-mono font-bold text-white">{companyProfile.valuation.dcfValue}</div>
+                          </div>
+                          <div className="w-px h-8 bg-white/10"></div>
+                          <div className="flex-1 text-right">
+                            <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Analyst Target</div>
+                            <div className="text-sm font-mono font-bold text-blue-400">{companyProfile.analystTake.targetPrice}</div>
+                          </div>
+                        </div>
+
+                        {/* Catalysts & Risks */}
+                        <div className="space-y-3">
+                          <div className="bg-emerald-900/20 border border-emerald-500/20 rounded-xl p-4">
+                            <div className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Near-Term Catalysts
+                            </div>
+                            <p className="text-xs text-emerald-100/80 leading-relaxed">{companyProfile.analystTake.catalysts}</p>
+                          </div>
+                          <div className="bg-rose-900/20 border border-rose-500/20 rounded-xl p-4">
+                            <div className="text-[9px] font-black text-rose-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>Key Risks
+                            </div>
+                            <p className="text-xs text-rose-100/80 leading-relaxed">{companyProfile.analystTake.risks}</p>
+                          </div>
+                        </div>
+
+                        {/* Analyst Rating */}
+                        <div className="flex items-center justify-between bg-white/[0.03] border border-white/[0.07] rounded-xl px-4 py-3">
+                          <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Analyst Consensus</div>
+                          <div className="text-sm font-black text-blue-400 tracking-wide">{companyProfile.analystTake.rating}</div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 

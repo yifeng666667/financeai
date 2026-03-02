@@ -55,18 +55,28 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
             return;
         }
 
-        const portfolioRef = collection(db, 'users', user.uid, 'portfolio');
-        const unsubscribe = onSnapshot(portfolioRef, (snapshot) => {
-            const holdings: PortfolioHolding[] = [];
-            snapshot.forEach((doc) => {
-                holdings.push(doc.data() as PortfolioHolding);
+        // Force-refresh the auth token so Firestore recognizes the credential
+        // before we attach the onSnapshot listener (avoids a race condition
+        // on first login where the token hasn't propagated yet).
+        let unsubscribe: () => void = () => { };
+
+        user.getIdToken(true).then(() => {
+            const portfolioRef = collection(db, 'users', user.uid, 'portfolio');
+            unsubscribe = onSnapshot(portfolioRef, (snapshot) => {
+                const holdings: PortfolioHolding[] = [];
+                snapshot.forEach((doc) => {
+                    holdings.push(doc.data() as PortfolioHolding);
+                });
+                // Sort by weight descending
+                holdings.sort((a, b) => b.weight - a.weight);
+                setPortfolioHoldings(holdings);
+                setLoading(false);
+            }, (error) => {
+                console.error("Error fetching portfolio:", error);
+                setLoading(false);
             });
-            // Sort by weight descending
-            holdings.sort((a, b) => b.weight - a.weight);
-            setPortfolioHoldings(holdings);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching portfolio:", error);
+        }).catch((error) => {
+            console.error("Error refreshing auth token:", error);
             setLoading(false);
         });
 

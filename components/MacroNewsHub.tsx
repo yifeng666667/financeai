@@ -162,7 +162,7 @@ export default function MacroNewsHub() {
                         {data.news.map((item) => (
                             <a
                                 key={item.id}
-                                href={item.url}
+                                href={`https://news.google.com/search?q=${encodeURIComponent(item.title)}&hl=en-US&gl=US&ceid=US:en`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="block group relative p-4 bg-white/5 hover:bg-white/[0.08] backdrop-blur-md rounded-2xl border border-white/10 transition-all duration-300 cursor-pointer"
