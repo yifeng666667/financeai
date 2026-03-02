@@ -204,13 +204,38 @@ const CORRELATION_DATA = [
   { pair: ['Gold', 'USD Index'], value: -0.78, trend: 'Stable' },
 ];
 
-const VAR_RESEARCH = {
-  description: '1-Day Value at Risk Analysis (95% Confidence)',
-  currentVaR: '1.45%',
-  stressScenario: '1987 Black Monday (Estimated Loss: -22.6%)',
-  riskSummary: 'The current market VaR of 1.45% indicates that there is a 95% probability that the portfolio will not lose more than 1.45% of its value in a single day. However, historical correlation shifts suggest that in a high-volatility event, the diversification benefit across sectors could drop by 30%, leading to a "VaR Breach."',
-  recommendation: 'Hedge high-beta technology exposures with inverse ETFs or treasury bonds to lower the tail-risk from current levels.'
-};
+const VAR_SCENARIOS = [
+  {
+    id: '1987',
+    description: '1-Day Value at Risk Analysis (95% Confidence)',
+    currentVaR: '1.45%',
+    expectedShortfall: '4.12%',
+    stressScenario: '1987 BLACK MONDAY',
+    estimatedLoss: '-22.6%',
+    riskSummary: 'The current market VaR of 1.45% indicates that there is a 95% probability that the portfolio will not lose more than 1.45% of its value in a single day. However, historical correlation shifts suggest that in a high-volatility event, the diversification benefit across sectors could drop by 30%, leading to a "VaR Breach."',
+    recommendation: 'Hedge high-beta technology exposures with inverse ETFs or treasury bonds to lower the tail-risk from current levels.'
+  },
+  {
+    id: '2008',
+    description: '1-Day Value at Risk Analysis (99% Confidence)',
+    currentVaR: '2.10%',
+    expectedShortfall: '6.50%',
+    stressScenario: '2008 FINANCIAL CRISIS',
+    estimatedLoss: '-35.2%',
+    riskSummary: 'Systemic banking failures and liquidity dry-ups could lead to unprecedented margin calls. The portfolio\'s heavy weighting in tech might initially seem insulated but is highly vulnerable to a broader credit freeze tightening multiples.',
+    recommendation: 'Increase allocation to short-duration sovereign debt and gold to provide uncorrelated liquidity buffers during severe credit contractions.'
+  },
+  {
+    id: '2020',
+    description: '1-Week Value at Risk Analysis (95% Confidence)',
+    currentVaR: '3.80%',
+    expectedShortfall: '8.20%',
+    stressScenario: '2020 COVID CRASH',
+    estimatedLoss: '-28.4%',
+    riskSummary: 'An exogenous velocity shock severely impacts near-term cash flows globally. While software and cloud infrastructure show resilience, hardware supply chains connected to the portfolio could face massive disruptions.',
+    recommendation: 'Rotate out of hardware-dependent semi-caps and increase weighting in pure-play SaaS businesses with bulletproof balance sheets.'
+  }
+];
 
 
 
@@ -255,6 +280,7 @@ const BALANCED_PORTFOLIO = [
 ];
 
 export default function DashboardV3() {
+  const [activeStressIndex, setActiveStressIndex] = useState(0);
   const { user, loading, signInWithGoogle, logout } = useAuth();
   const { portfolioHoldings, addHolding: addToPortfolio, removeHolding: removeFromPortfolio, updateWeight: updateHoldingWeight, applyModelPortfolio } = usePortfolio();
 
@@ -1000,30 +1026,53 @@ export default function DashboardV3() {
                       <h2 className="text-xl font-black text-white uppercase tracking-tight">VaR Research & Stress Test</h2>
                     </div>
 
-                    <div className="bg-black/40 border border-white/10 p-6 rounded-3xl mb-8 relative overflow-hidden">
-                      <VaRDistribution confidence={95} varValue={VAR_RESEARCH.currentVaR} expectedShortfall="4.12%" />
+                    <div className="bg-black/40 border border-white/10 p-6 rounded-3xl mb-6 relative overflow-hidden">
+                      <VaRDistribution
+                        confidence={VAR_SCENARIOS[activeStressIndex].description.includes('99%') ? 99 : 95}
+                        varValue={VAR_SCENARIOS[activeStressIndex].currentVaR}
+                        expectedShortfall={VAR_SCENARIOS[activeStressIndex].expectedShortfall}
+                      />
                     </div>
 
-                    <div className="space-y-6">
-                      <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                        <div className="text-xs text-gray-400 font-bold uppercase tracking-widest">Stress Scenario</div>
-                        <div className="text-sm font-black text-red-500 uppercase tracking-tighter shadow-sm">{VAR_RESEARCH.stressScenario}</div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center pb-1">
+                        <div className="text-xs text-gray-400 font-bold uppercase tracking-widest">Stress Scenarios</div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        {VAR_SCENARIOS.map((scenario, index) => (
+                          <button
+                            key={scenario.id}
+                            onClick={() => setActiveStressIndex(index)}
+                            className={`px-4 py-3 rounded-xl border text-left transition-all flex justify-between items-center ${activeStressIndex === index
+                                ? 'bg-red-500/10 border-red-500/30 ring-1 ring-red-500/50'
+                                : 'bg-white/5 border-white/5 hover:bg-white/10'
+                              }`}
+                          >
+                            <div className={`text-sm font-bold ${activeStressIndex === index ? 'text-white' : 'text-gray-400'}`}>
+                              {scenario.stressScenario}
+                            </div>
+                            <div className={`text-sm font-black ${activeStressIndex === index ? 'text-red-500 shadow-sm' : 'text-gray-500'}`}>
+                              EST. LOSS: {scenario.estimatedLoss}
+                            </div>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-8">
+                  <div className="mt-6">
                     <div className="bg-emerald-500/5 rounded-2xl border border-emerald-500/20 p-6">
                       <div className="flex items-center gap-2 mb-3">
                         <span className="p-1 bg-emerald-500/20 rounded text-emerald-400"><Activity size={12} /></span>
                         <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">VaR Intelligence Report</span>
                       </div>
                       <p className="text-sm text-gray-300 leading-relaxed font-medium mb-4">
-                        {VAR_RESEARCH.riskSummary}
+                        {VAR_SCENARIOS[activeStressIndex].riskSummary}
                       </p>
                       <div className="pt-4 border-t border-white/10">
                         <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest block mb-2">Recommendation</span>
-                        <p className="text-xs text-emerald-400 font-bold italic">"{VAR_RESEARCH.recommendation}"</p>
+                        <p className="text-xs text-emerald-400 font-bold italic">"{VAR_SCENARIOS[activeStressIndex].recommendation}"</p>
                       </div>
                     </div>
                   </div>

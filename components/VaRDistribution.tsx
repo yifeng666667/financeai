@@ -67,7 +67,7 @@ export default function VaRDistribution({
 
                 {/* Labels */}
                 <text x={mean} y={height + 15} textAnchor="middle" className="text-[10px] fill-gray-500 font-black">NORMAL MARKET REGIME</text>
-                <text x={varX - 10} y={20} textAnchor="end" className="text-[10px] fill-red-400 font-black tracking-tighter uppercase">VaR Threshold ({varValue})</text>
+                <text x={varX + 10} y={20} textAnchor="start" className="text-[10px] fill-red-400 font-black tracking-tighter uppercase">VaR Threshold ({varValue})</text>
                 <text x={varX / 2} y={height - 10} textAnchor="middle" className="text-[10px] fill-red-500 font-black uppercase">Tail Risk</text>
             </svg>
 
