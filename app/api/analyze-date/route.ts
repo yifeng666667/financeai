@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
         const query = `${ticker} after:${date} before:${nextDateStr}`;
         const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let feedItems: any[] = [];
         try {
             const feed = await parser.parseURL(url);

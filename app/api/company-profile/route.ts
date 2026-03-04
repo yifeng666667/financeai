@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
     // In a real app, this would hit a financial data API (e.g. Yahoo Finance, FMP, Polygon)
     // Here we provide high-quality mock profiles for the top tech/finance tickers
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profiles: Record<string, any> = {
         'AAPL': {
             name: "Apple Inc.",

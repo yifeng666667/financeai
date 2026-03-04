@@ -27,7 +27,7 @@ export async function POST(req: Request) {
             }
         }
 
-        let analysis = {
+        const analysis = {
             systemicInterpretation: {
                 headline: "Market Absorbs Mixed Signals Amid Lingering Uncertainty",
                 points: [

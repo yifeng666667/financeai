@@ -40,12 +40,10 @@ export async function GET(request: NextRequest) {
             volume: day.volume
         })).filter(day => day.open !== null && day.close !== null); // prevent null days
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let newsEvents: any[] = [];
         try {
             const newsResult = await yahooFinance.search(ticker, { newsCount: 20 });
             if (newsResult.news) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 newsEvents = newsResult.news.map((n: any) => {
                     const dateObj = new Date(n.providerPublishTime);
                     const dateStr = dateObj.toISOString().split('T')[0];
