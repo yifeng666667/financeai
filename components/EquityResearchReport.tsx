@@ -115,6 +115,10 @@ interface ReportData {
         peForward: string;
         pb: string;
         peg: string;
+        pePercentile: number;
+        peHistoricalLow: string;
+        peHistoricalHigh: string;
+        peHistoricalMean: string;
         dcfBase: number;
         waccBase: number;
     };
@@ -490,29 +494,84 @@ export default function EquityResearchReport() {
                                     </section>
                                 )}
 
-                                {/* Historical Trends */}
+                                {/* Historical Trends - Separated Charts */}
                                 {reportData.historicalTrends && reportData.historicalTrends.length > 0 && (
-                                    <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a] mb-8">
+                                    <section>
                                         <h3 className="text-xl font-bold text-blue-300 mb-6 pb-2 border-b border-blue-500/20 flex items-center gap-2">
-                                            <LineChartIcon className="w-5 h-5 text-blue-400" /> Historical Margin Trends
+                                            <LineChartIcon className="w-5 h-5 text-blue-400" /> Historical Margin & Return Trends
                                         </h3>
-                                        <div className="h-64 w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <LineChart data={reportData.historicalTrends} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                                    <XAxis dataKey="year" stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                                                    <YAxis stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 12 }} unit="%" />
-                                                    <RechartsTooltip
-                                                        contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '8px' }}
-                                                        itemStyle={{ fontSize: '13px', fontWeight: 'bold' }}
-                                                        labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
-                                                    />
-                                                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                                                    <Line type="monotone" dataKey="grossMargin" name="Gross Margin" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                                                    <Line type="monotone" dataKey="netMargin" name="Net Margin" stroke="#a855f7" strokeWidth={3} dot={{ r: 4, fill: '#a855f7', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                                                    <Line type="monotone" dataKey="roe" name="ROE" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                                                </LineChart>
-                                            </ResponsiveContainer>
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                            {/* Gross Margin Chart */}
+                                            <div className="bg-[#ffffff05] p-4 rounded-xl border border-[#ffffff0a]">
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Gross Margin Trend</h4>
+                                                <div className="h-40 w-full">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <LineChart data={reportData.historicalTrends}>
+                                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                                            <XAxis dataKey="year" stroke="#4b5563" tick={{ fill: '#6b7280', fontSize: 10 }} />
+                                                            <YAxis
+                                                                width={35}
+                                                                stroke="#4b5563"
+                                                                tick={{ fill: '#6b7280', fontSize: 10 }}
+                                                                tickFormatter={(val) => `${val}%`}
+                                                            />
+                                                            <RechartsTooltip
+                                                                contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '8px' }}
+                                                                labelStyle={{ fontSize: '10px' }}
+                                                            />
+                                                            <Line type="monotone" dataKey="grossMargin" name="Gross %" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+                                                        </LineChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
+
+                                            {/* Net Margin Chart */}
+                                            <div className="bg-[#ffffff05] p-4 rounded-xl border border-[#ffffff0a]">
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Net Margin Trend</h4>
+                                                <div className="h-40 w-full">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <LineChart data={reportData.historicalTrends}>
+                                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                                            <XAxis dataKey="year" stroke="#4b5563" tick={{ fill: '#6b7280', fontSize: 10 }} />
+                                                            <YAxis
+                                                                width={35}
+                                                                stroke="#4b5563"
+                                                                tick={{ fill: '#6b7280', fontSize: 10 }}
+                                                                tickFormatter={(val) => `${val}%`}
+                                                            />
+                                                            <RechartsTooltip
+                                                                contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '8px' }}
+                                                                labelStyle={{ fontSize: '10px' }}
+                                                            />
+                                                            <Line type="monotone" dataKey="netMargin" name="Net %" stroke="#a855f7" strokeWidth={2} dot={{ r: 3 }} />
+                                                        </LineChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
+
+                                            {/* ROE Chart */}
+                                            <div className="bg-[#ffffff05] p-4 rounded-xl border border-[#ffffff0a]">
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">ROE Trend</h4>
+                                                <div className="h-40 w-full">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <LineChart data={reportData.historicalTrends}>
+                                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                                            <XAxis dataKey="year" stroke="#4b5563" tick={{ fill: '#6b7280', fontSize: 10 }} />
+                                                            <YAxis
+                                                                width={35}
+                                                                stroke="#4b5563"
+                                                                tick={{ fill: '#6b7280', fontSize: 10 }}
+                                                                tickFormatter={(val) => `${val}%`}
+                                                            />
+                                                            <RechartsTooltip
+                                                                contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '8px' }}
+                                                                labelStyle={{ fontSize: '10px' }}
+                                                            />
+                                                            <Line type="monotone" dataKey="roe" name="ROE %" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                                                        </LineChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
                                         </div>
                                     </section>
                                 )}
@@ -522,58 +581,95 @@ export default function EquityResearchReport() {
                                     <h3 className="text-xl font-bold text-emerald-300 mb-4 pb-2 border-b border-emerald-500/20">Valuation & Methodology</h3>
 
                                     {reportData.valuationStats && (
-                                        <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            <div className="bg-[#ffffff05] p-3 rounded-lg border border-[#ffffff0a]">
-                                                <div className="text-sm text-gray-400 mb-1">P/E (TTM)</div>
-                                                <div className="text-xl font-mono text-white">{reportData.valuationStats.peTTM}x</div>
-                                            </div>
-                                            <div className="bg-[#ffffff05] p-3 rounded-lg border border-[#ffffff0a]">
-                                                <div className="text-sm text-gray-400 mb-1">Forward P/E</div>
-                                                <div className="text-xl font-mono text-white">{reportData.valuationStats.peForward}x</div>
-                                            </div>
-                                            <div className="bg-[#ffffff05] p-3 rounded-lg border border-[#ffffff0a]">
-                                                <div className="text-sm text-gray-400 mb-1">P/B</div>
-                                                <div className="text-xl font-mono text-white">{reportData.valuationStats.pb}x</div>
-                                            </div>
-                                            <div className="bg-[#ffffff05] p-3 rounded-lg border border-[#ffffff0a]">
-                                                <div className="text-sm text-gray-400 mb-1">PEG Ratio</div>
-                                                <div className="text-xl font-mono text-white">{reportData.valuationStats.peg}</div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {reportData.valuationStats && (
-                                        <div className="mb-6 bg-[#0a0e17] p-5 rounded-lg border border-emerald-500/20">
-                                            <div className="flex justify-between items-center mb-4">
-                                                <div className="text-sm font-bold text-gray-300">DCF Sensitivity Analysis</div>
-                                                <div className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-sm border border-emerald-500/20 flex items-center gap-2">
-                                                    Implied Fair Value:
-                                                    <span className="font-mono font-bold text-white">
-                                                        ${(reportData.valuationStats.dcfBase * (reportData.valuationStats.waccBase / userWacc)).toFixed(2)}
-                                                    </span>
+                                        <>
+                                            <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div className="bg-[#ffffff05] p-3 rounded-lg border border-[#ffffff0a]">
+                                                    <div className="text-sm text-gray-400 mb-1">P/E (TTM)</div>
+                                                    <div className="text-xl font-mono text-white">{reportData.valuationStats.peTTM}x</div>
+                                                </div>
+                                                <div className="bg-[#ffffff05] p-3 rounded-lg border border-[#ffffff0a]">
+                                                    <div className="text-sm text-gray-400 mb-1">Forward P/E</div>
+                                                    <div className="text-xl font-mono text-white">{reportData.valuationStats.peForward}x</div>
+                                                </div>
+                                                <div className="bg-[#ffffff05] p-3 rounded-lg border border-[#ffffff0a]">
+                                                    <div className="text-sm text-gray-400 mb-1">P/B</div>
+                                                    <div className="text-xl font-mono text-white">{reportData.valuationStats.pb}x</div>
+                                                </div>
+                                                <div className="bg-[#ffffff05] p-3 rounded-lg border border-[#ffffff0a]">
+                                                    <div className="text-sm text-gray-400 mb-1">PEG Ratio</div>
+                                                    <div className="text-xl font-mono text-white">{reportData.valuationStats.peg}</div>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between text-xs text-gray-400 font-mono">
-                                                    <span>WACC: 7.0%</span>
-                                                    <span className="text-emerald-400 font-bold w-12 text-center">{userWacc.toFixed(1)}%</span>
-                                                    <span>WACC: 12.0%</span>
+                                            {/* P/E Historical Context Gauge */}
+                                            <div className="mb-8 p-5 rounded-xl bg-[#00000030] border border-[#ffffff0a]">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">P/E Historical Position (5Y)</div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs text-indigo-400 font-bold">Percentile: {reportData.valuationStats.pePercentile}%</span>
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${reportData.valuationStats.pePercentile > 80 ? 'border-rose-500/30 text-rose-400 bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'}`}>
+                                                            {reportData.valuationStats.pePercentile > 80 ? 'Premium' : 'Discount'}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <input
-                                                    type="range"
-                                                    min="7.0"
-                                                    max="12.0"
-                                                    step="0.1"
-                                                    value={userWacc}
-                                                    onChange={(e) => setUserWacc(parseFloat(e.target.value))}
-                                                    className="w-full accent-emerald-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                                                />
-                                                <div className="text-xs text-center text-gray-500 mt-2">
-                                                    Adjust the Weighted Average Cost of Capital to see the impact on our DCF model.
+                                                <div className="relative h-2 w-full bg-gray-800 rounded-full mb-2">
+                                                    <div
+                                                        className="absolute top-0 bottom-0 bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-600 rounded-full"
+                                                        style={{ width: `${reportData.valuationStats.pePercentile}%` }}
+                                                    />
+                                                    <div
+                                                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-indigo-500 shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                                                        style={{ left: `${reportData.valuationStats.pePercentile}%`, marginLeft: '-8px' }}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between text-[10px] font-mono text-gray-500 px-1">
+                                                    <div className="flex flex-col items-center">
+                                                        <span>LOW</span>
+                                                        <span className="text-gray-400 font-bold">{reportData.valuationStats.peHistoricalLow}x</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-center">
+                                                        <span>MEAN</span>
+                                                        <span className="text-gray-400 font-bold">{reportData.valuationStats.peHistoricalMean}x</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-center">
+                                                        <span>HIGH</span>
+                                                        <span className="text-gray-400 font-bold">{reportData.valuationStats.peHistoricalHigh}x</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+
+                                            <div className="mb-6 bg-[#0a0e17] p-5 rounded-lg border border-emerald-500/20">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div className="text-sm font-bold text-gray-300">DCF Sensitivity Analysis</div>
+                                                    <div className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-sm border border-emerald-500/20 flex items-center gap-2">
+                                                        Implied Fair Value:
+                                                        <span className="font-mono font-bold text-white">
+                                                            ${(reportData.valuationStats.dcfBase * (reportData.valuationStats.waccBase / userWacc)).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between text-xs text-gray-400 font-mono">
+                                                        <span>WACC: 7.0%</span>
+                                                        <span className="text-emerald-400 font-bold w-12 text-center">{userWacc.toFixed(1)}%</span>
+                                                        <span>WACC: 12.0%</span>
+                                                    </div>
+                                                    <input
+                                                        type="range"
+                                                        min="7.0"
+                                                        max="12.0"
+                                                        step="0.1"
+                                                        value={userWacc}
+                                                        onChange={(e) => setUserWacc(parseFloat(e.target.value))}
+                                                        className="w-full accent-emerald-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                                    />
+                                                    <div className="text-xs text-center text-gray-500 mt-2">
+                                                        Adjust the Weighted Average Cost of Capital to see the impact on our DCF model.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
                                     )}
 
                                     {reportData.valuation.split('\n\n').map((para, i) => (

@@ -45,64 +45,58 @@ export default function EarthBackground() {
 
     return (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none z-0 bg-[#01040a]">
-            {/* Embedded styles for Comets and Enhanced Animations */}
+            {/* Embedded styles for Enhanced Animations */}
             <style>{`
-                @keyframes comet {
-                    0% { transform: translate(60vw, -60vh) rotate(45deg); opacity: 0; }
-                    10% { opacity: 1; }
-                    35% { transform: translate(-60vw, 60vh) rotate(45deg); opacity: 0; }
-                    100% { opacity: 0; }
+                @keyframes twinkle {
+                    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+                    50% { opacity: 1; transform: scale(1.2); }
+                }
+                @keyframes star-drift {
+                    0% { transform: translate(0, 0); }
+                    100% { transform: translate(-10px, -5px); }
                 }
                 @keyframes pulse-intense {
                     0%, 100% { transform: scale(1.0); opacity: 0.5; filter: blur(80px); }
                     50% { transform: scale(1.15); opacity: 0.8; filter: blur(100px); }
                 }
-                @keyframes shimmer {
-                    0% { opacity: 0.3; }
-                    50% { opacity: 0.7; }
-                    100% { opacity: 0.3; }
-                }
-                .comet {
+                .star {
                     position: absolute;
-                    width: 2px;
-                    height: 200px;
-                    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(100, 220, 255, 0.6) 50%, rgba(255,255,255,1) 100%);
+                    background: white;
                     border-radius: 50%;
-                    filter: drop-shadow(0 0 15px rgba(100, 220, 255, 0.9));
-                    z-index: 5;
                 }
-                /* Dense Comet System */
-                .comet-1 { top: -10%; left: 30%; animation: comet 10s infinite linear; animation-delay: 0s; }
-                .comet-2 { top: 10%; left: 70%; animation: comet 14s infinite linear; animation-delay: 4s; }
-                .comet-3 { top: 20%; left: 90%; animation: comet 12s infinite linear; animation-delay: 7s; }
-                .comet-4 { top: -5%; left: 10%; animation: comet 18s infinite linear; animation-delay: 2s; }
-                .comet-5 { top: 40%; left: 100%; animation: comet 16s infinite linear; animation-delay: 9s; }
-                .comet-6 { top: 5%; left: 50%; animation: comet 15s infinite linear; animation-delay: 1s; }
-                .comet-7 { top: 15%; left: 20%; animation: comet 20s infinite linear; animation-delay: 5s; }
-                .comet-8 { top: 0%; left: 85%; animation: comet 13s infinite linear; animation-delay: 11s; }
             `}</style>
 
-            {/* Comets Layer - High Density */}
+            {/* Dynamic Starfield */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                <div className="comet comet-1" />
-                <div className="comet comet-2" />
-                <div className="comet comet-3" />
-                <div className="comet comet-4" />
-                <div className="comet comet-5" />
-                <div className="comet comet-6" />
-                <div className="comet comet-7" />
-                <div className="comet comet-8" />
-            </div>
+                {/* Twinkling Small Stars */}
+                <div className="absolute inset-0 opacity-40" style={{ animation: 'star-drift 60s infinite alternate linear' }}>
+                    {[...Array(50)].map((_, i) => (
+                        <div
+                            key={`star-twinkle-${i}`}
+                            className="star"
+                            style={{
+                                width: Math.random() * 2 + 'px',
+                                height: Math.random() * 2 + 'px',
+                                top: Math.random() * 100 + '%',
+                                left: Math.random() * 100 + '%',
+                                opacity: Math.random(),
+                                animation: `twinkle ${Math.random() * 4 + 2}s infinite ease-in-out`,
+                                animationDelay: `${Math.random() * 5}s`
+                            }}
+                        />
+                    ))}
+                </div>
 
-            {/* High Density Starfield */}
-            <div
-                className="absolute inset-0 z-0 opacity-60 mix-blend-screen"
-                style={{
-                    backgroundImage: 'radial-gradient(1px 1px at 15px 15px, #ffffff 100%, transparent), radial-gradient(1.5px 1.5px at 50px 30px, rgba(255,255,255,0.8) 100%, transparent), radial-gradient(2px 2px at 90px 80px, rgba(140, 200, 255, 0.6) 100%, transparent), radial-gradient(1px 1px at 130px 120px, rgba(255,255,255,0.9) 100%, transparent)',
-                    backgroundRepeat: 'repeat',
-                    backgroundSize: '100px 100px, 150px 150px, 200px 200px, 250px 250px'
-                }}
-            />
+                {/* Distant Static Starfield */}
+                <div
+                    className="absolute inset-0 z-0 opacity-40 mix-blend-screen"
+                    style={{
+                        backgroundImage: 'radial-gradient(1px 1px at 15px 15px, #ffffff 100%, transparent), radial-gradient(1.5px 1.5px at 150px 130px, rgba(255,255,255,0.8) 100%, transparent)',
+                        backgroundRepeat: 'repeat',
+                        backgroundSize: '200px 200px, 300px 300px'
+                    }}
+                />
+            </div>
 
             {/* Layered Multi-Atmospheric Glows */}
 
