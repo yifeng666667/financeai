@@ -193,15 +193,15 @@ export async function POST(req: Request) {
 
         const operatingIncome = latestIncome.operatingIncome || latestIncome.ebit || 0;
         const interestExpense = Math.abs(latestIncome.interestExpense || 0);
-        let interestCoverage = interestExpense > 0 ? operatingIncome / interestExpense : (isB2B ? 15.4 : 8.2);
+        const interestCoverage = interestExpense > 0 ? operatingIncome / interestExpense : (isB2B ? 15.4 : 8.2);
 
         const costOfRev = latestIncome.costOfRevenue || 0;
         const inventory = latestBalance.inventory || 0;
-        let inventoryTurnover = inventory > 0 ? costOfRev / inventory : (isB2B ? 12.4 : 5.5);
+        const inventoryTurnover = inventory > 0 ? costOfRev / inventory : (isB2B ? 12.4 : 5.5);
 
         const totalRev = latestIncome.totalRevenue || 0;
         const accountsRec = latestBalance.netReceivables || latestBalance.accountsReceivable || 0;
-        let receivablesTurnover = (totalRev > 0 && accountsRec > 0) ? totalRev / accountsRec : (isB2B ? 6.5 : 12.0);
+        const receivablesTurnover = (totalRev > 0 && accountsRec > 0) ? totalRev / accountsRec : (isB2B ? 6.5 : 12.0);
         const dso = 365 / receivablesTurnover;
 
         const fcfGrowthValue = ((summary as any)?.financialData?.freeCashflow || 0) > 0 ?

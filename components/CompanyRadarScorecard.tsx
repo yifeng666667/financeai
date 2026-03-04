@@ -17,29 +17,30 @@ interface CompanyRadarScorecardProps {
     bearCase: string[];
 }
 
-export default function CompanyRadarScorecard({ symbol, data, bullCase, bearCase }: CompanyRadarScorecardProps) {
-    // SVG Dimensions & Padding
-    const width = 300;
-    const height = 300;
-    const padding = 50;
-    const radius = (width - padding * 2) / 2;
-    const center = { x: width / 2, y: height / 2 };
+// SVG Dimensions & Padding
+const width = 300;
+const height = 300;
+const padding = 50;
+const radius = (width - padding * 2) / 2;
+const center = { x: width / 2, y: height / 2 };
 
-    // 5 axes for our categories
-    const axes = ["Value", "Growth", "Quality", "Momentum", "Volatility"] as const;
-    const numAxes = axes.length;
-    const angleStep = (Math.PI * 2) / numAxes;
+// 5 axes for our categories
+const axes = ["Value", "Growth", "Quality", "Momentum", "Volatility"] as const;
+const numAxes = axes.length;
+const angleStep = (Math.PI * 2) / numAxes;
 
-    // Helper to calculate x,y on the radar given a value 0-100 and an axis index
-    const getCoordinates = (value: number, axisIndex: number) => {
-        // Offset by -PI/2 to start the first axis straight up
-        const angle = axisIndex * angleStep - Math.PI / 2;
-        const distance = (value / 100) * radius;
-        return {
-            x: center.x + distance * Math.cos(angle),
-            y: center.y + distance * Math.sin(angle)
-        };
+// Helper to calculate x,y on the radar given a value 0-100 and an axis index
+const getCoordinates = (value: number, axisIndex: number) => {
+    // Offset by -PI/2 to start the first axis straight up
+    const angle = axisIndex * angleStep - Math.PI / 2;
+    const distance = (value / 100) * radius;
+    return {
+        x: center.x + distance * Math.cos(angle),
+        y: center.y + distance * Math.sin(angle)
     };
+};
+
+export default function CompanyRadarScorecard({ symbol, data, bullCase, bearCase }: CompanyRadarScorecardProps) {
 
     // Generate paths for the background grid (concentric pentagons)
     const gridLevels = [20, 40, 60, 80, 100];
@@ -58,7 +59,7 @@ export default function CompanyRadarScorecard({ symbol, data, bullCase, bearCase
             return `${x},${y}`;
         });
         return `M ${points.join(' L ')} Z`;
-    }, [data, axes, getCoordinates]);
+    }, [data]);
 
     // Labels positioning
     const labels = axes.map((axis, i) => {
