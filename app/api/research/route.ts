@@ -66,7 +66,6 @@ export async function POST(req: Request) {
         // Professional Executive Summary
         const ratingValue = (quote as any)?.averageAnalystRating || 'Strong Buy';
         const rating = typeof ratingValue === 'string' ? ratingValue : 'Strong Buy';
-        const executiveSummary = `We rate ${companyShortName} (${ticker}) as a ${rating} based on its robust structural positioning within the ${sector} sector. As a leading ${businessModel} entity, the company has demonstrated significant resilience in its ${industryName} operations. ${businessSummary.split('.').slice(0, 2).join('. ')}.\n\nOur analysis indicates that ${companyShortName}'s strategic pivot towards high-margin segments and its disciplined capital allocation framework provide a clear pathway for multi-year earnings expansion. We believe the market is underestimating the operating leverage potential within the ${sector} segment, particularly as ${companyShortName} continues to optimize its global footprint and R&D efficiency.`;
 
         // Metrics for Thesis
         const pe = summary?.summaryDetail?.forwardPE || summary?.summaryDetail?.trailingPE || 20;
@@ -74,12 +73,6 @@ export async function POST(req: Request) {
         const revenueGrowth = summary?.financialData?.revenueGrowth || 0.1;
         const netMargin = summary?.financialData?.profitMargins || 0.15;
         const debtToEquity = summary?.financialData?.debtToEquity || 0;
-
-        const investmentThesis = [
-            `**Structural Growth Vectors**: ${companyShortName} is uniquely positioned to capture the secular shift in ${industryName}, supported by a revenue growth profile of ${(revenueGrowth * 100).toFixed(1)}% which exceeds peer medians.`,
-            `**Margin Accretion & Efficiency**: With a net profit margin of ${(netMargin * 100).toFixed(1)}%, the company maintains a superior cost structure and pricing power, allowing for significant operational leverage.`,
-            `**Balance Sheet Fortification**: A measured debt-to-equity ratio of ${debtToEquity.toFixed(2)} provides substantial dry powder for inorganic growth opportunities and shareholder returns through buybacks and dividends.`
-        ];
 
         const pegValue = summary?.defaultKeyStatistics?.pegRatio || 0;
         const valuationStats = {
@@ -249,6 +242,24 @@ export async function POST(req: Request) {
             ((Number((summary as any)?.financialData?.revenueGrowth || 0.05) + 0.02) * 100).toFixed(1) + '%' :
             'N/A';
 
+        // --- 4. Historical Prices for Valuation Bands ---
+        // Fetch 5 years of extremely smoothed monthly/quarterly data to keep payload reasonable
+        const startDate = new Date();
+        startDate.setFullYear(startDate.getFullYear() - 5);
+        let historicalPrices: Array<{ date: string; price: number }> = [];
+        try {
+            const histData = await yahooFinance.historical(ticker, {
+                period1: startDate,
+                interval: '1mo'
+            });
+            historicalPrices = histData.map(d => ({
+                date: d.date.toISOString().substring(0, 7), // YYYY-MM
+                price: Number((d.adjClose || d.close || 0).toFixed(2))
+            }));
+        } catch (error) {
+            console.warn(`Could not fetch historical pricing for ${ticker}`, error);
+        }
+
         const mockReport = {
             ticker: ticker,
             companyName: companyShortName,
@@ -257,20 +268,8 @@ export async function POST(req: Request) {
             rating: typeof rating === 'string' ? rating.split(' - ')[1] || rating : 'Outperform',
             targetPrice: '$' + (valuationStats.dcfBase * 1.12).toFixed(2),
             currentPrice: '$' + currentPrice.toFixed(2),
-            executiveSummary,
-            investmentThesis,
-            valuation: `Our valuation framework utilizes a multi-stage Discounted Cash Flow (DCF) model and peer-relative multiple analysis. An implied fair value of $${valuationStats.dcfBase.toFixed(2)} is derived using a terminal growth rate of 2.5% and a WACC of ${valuationStats.waccBase}%. \n\nThe current forward P/E of ${valuationStats.peForward}x represents a compelling entry point relative to the historical 5-year average. We maintain our ${rating} rating, expecting multiple expansion as the market prices in the structural growth of the ${industryName} segment.`,
             valuationStats,
-            catalysts: [
-                `Accelerated adoption of ${industryName} solutions across ${isB2B ? 'enterprise' : 'consumer'} verticals.`,
-                `Potential for a meaningful earnings beat in the upcoming fiscal quarter due to operational efficiencies.`,
-                `Strategic M&A activity that could be immediately accretive to GAAP EPS.`
-            ],
-            risks: [
-                `**Execution Risk**: Potential delays in the rollout of core infrastructure or new product lines.`,
-                `**Macroeconomic Sensitivity**: Prolonged higher-for-longer interest rate environments impacting discretionary ${isB2B ? 'capex' : 'spending'}.`,
-                `**Competitive Displacement**: Aggressive pricing strategies from legacy incumbents or disruptive startups.`
-            ],
+            historicalPrices,
             financials,
             ratios: {
                 profitability: [

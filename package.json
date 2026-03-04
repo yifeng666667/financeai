@@ -9,7 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.37",
+    "@ai-sdk/openai": "^3.0.39",
+    "@ai-sdk/react": "^3.0.114",
     "@tailwindcss/postcss": "^4.2.1",
+    "ai": "^6.0.112",
     "autoprefixer": "^10.4.27",
     "cheerio": "^1.2.0",
     "cobe": "^0.6.5",
@@ -24,7 +28,8 @@
     "recharts": "^3.7.0",
     "rss-parser": "^3.13.0",
     "tailwindcss": "^4.2.1",
-    "yahoo-finance2": "^3.13.1"
+    "yahoo-finance2": "^3.13.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^20",

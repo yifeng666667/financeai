@@ -2,7 +2,27 @@
 
 import React, { useState } from 'react';
 import { Search, Loader2, Sparkles, FileText, ChevronRight, CheckCircle2, TrendingUp, AlertTriangle, Briefcase, Zap, Activity, ShieldCheck, PieChart, BarChart3, Users, LineChart as LineChartIcon } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend, ComposedChart, ReferenceLine } from 'recharts';
+import { experimental_useObject as useObject } from '@ai-sdk/react';
+import { z } from 'zod';
+
+const reportSchema = z.object({
+    executiveSummary: z.string(),
+    priceTargets: z.object({
+        bull: z.object({ price: z.number(), rationale: z.string() }),
+        base: z.object({ price: z.number(), rationale: z.string() }),
+        bear: z.object({ price: z.number(), rationale: z.string() })
+    }),
+    segmentBreakdown: z.array(z.object({
+        name: z.string(),
+        percentage: z.number(),
+        insight: z.string()
+    })),
+    investmentThesis: z.array(z.string()),
+    valuation: z.string(),
+    catalysts: z.array(z.string()),
+    risks: z.array(z.string()),
+});
 
 interface Company {
     ticker: string;
@@ -123,6 +143,7 @@ interface ReportData {
         waccBase: number;
     };
     historicalTrends?: Array<{ year: string; grossMargin: number; netMargin: number; roe: number }>;
+    historicalPrices?: Array<{ date: string; price: number }>;
     peerComparison?: Array<{ ticker: string; isTarget?: boolean; pe: string; pb: string; netMargin: string }>;
 }
 
@@ -134,6 +155,11 @@ export default function EquityResearchReport() {
     const [reportData, setReportData] = useState<ReportData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [userWacc, setUserWacc] = useState<number>(9.5);
+
+    const { object: aiReport, submit, isLoading: isGeneratingAI } = useObject({
+        api: '/api/research/generate',
+        schema: reportSchema,
+    });
 
     const handleSelectCompany = (company: Company, industryName: string) => {
         setSelectedCompany(company);
@@ -162,10 +188,13 @@ export default function EquityResearchReport() {
                 }),
             });
 
-            if (!response.ok) throw new Error('Failed to generate report');
+            if (!response.ok) throw new Error('Failed to fetch financial data');
 
             const data = await response.json();
             setReportData(data);
+
+            // Trigger the AI streaming analysis with the fetched data
+            submit(data);
         } catch (err: any) {
             setError(err.message || 'An error occurred during generation.');
         } finally {
@@ -330,7 +359,12 @@ export default function EquityResearchReport() {
                                     <h3 className="text-xl font-bold text-indigo-300 mb-4 pb-2 border-b border-indigo-500/20 flex items-center gap-2">
                                         <TrendingUp className="w-5 h-5" /> Executive Summary
                                     </h3>
-                                    {reportData.executiveSummary.split('\n\n').map((para, i) => (
+                                    {(aiReport?.executiveSummary || '') === '' && isGeneratingAI && (
+                                        <div className="flex items-center gap-2 text-indigo-400 text-sm italic">
+                                            <Loader2 className="w-4 h-4 animate-spin" /> Synthesizing executive overview...
+                                        </div>
+                                    )}
+                                    {aiReport?.executiveSummary?.split('\n\n').map((para: string, i: number) => (
                                         <p key={i} className="text-gray-300 leading-relaxed text-[15px] mb-4 last:mb-0">
                                             {para}
                                         </p>
@@ -342,8 +376,14 @@ export default function EquityResearchReport() {
                                     <h3 className="text-xl font-bold text-blue-300 mb-4 pb-2 border-b border-blue-500/20">
                                         Core Investment Thesis
                                     </h3>
+                                    {(aiReport?.investmentThesis || []).length === 0 && isGeneratingAI && (
+                                        <div className="flex items-center gap-2 text-blue-400 text-sm italic">
+                                            <Loader2 className="w-4 h-4 animate-spin" /> Identifying structural growth vectors...
+                                        </div>
+                                    )}
                                     <ul className="space-y-4">
-                                        {reportData.investmentThesis.map((thesis, i) => {
+                                        {(aiReport?.investmentThesis || []).map((thesis: string | undefined, i: number) => {
+                                            if (!thesis) return null;
                                             const [boldPart, ...rest] = thesis.split('**');
                                             if (rest.length > 0) {
                                                 return (
@@ -575,6 +615,100 @@ export default function EquityResearchReport() {
                                         </div>
                                     </section>
                                 )}
+                                {/* Historical Valuation Bands Chart */}
+                                {reportData.historicalPrices && reportData.historicalPrices.length > 0 && reportData.valuationStats && (
+                                    <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a] mb-8">
+                                        <h3 className="text-xl font-bold text-amber-300 mb-6 pb-2 border-b border-amber-500/20 flex items-center gap-2">
+                                            <LineChartIcon className="w-5 h-5 text-amber-400" /> Historical Valuation Bands (5Y)
+                                        </h3>
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                            <div className="lg:col-span-2 h-72">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <ComposedChart data={reportData.historicalPrices} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                                        <XAxis
+                                                            dataKey="date"
+                                                            stroke="#ffffff50"
+                                                            fontSize={10}
+                                                            tickFormatter={(val) => {
+                                                                const d = new Date(val);
+                                                                return `${d.getFullYear()}`;
+                                                            }}
+                                                            minTickGap={30}
+                                                        />
+                                                        <YAxis
+                                                            stroke="#ffffff50"
+                                                            fontSize={10}
+                                                            tickFormatter={(val) => `$${val}`}
+                                                            domain={['auto', 'auto']}
+                                                        />
+                                                        <RechartsTooltip
+                                                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#ffffff20', borderRadius: '8px', color: '#fff' }}
+                                                            itemStyle={{ color: '#fff' }}
+                                                            labelFormatter={(label) => `Date: ${label}`}
+                                                        />
+
+                                                        {/* Valuation Band Areas - Calculate implied price based on trailing EPS vs historical PE ranges */}
+                                                        {(() => {
+                                                            const currentPriceStr = (reportData.currentPrice || '').toString().replace(/[^0-9.-]+/g, "");
+                                                            const currentPrice = currentPriceStr ? parseFloat(currentPriceStr) : 0;
+                                                            const currentPE = parseFloat(String(reportData.valuationStats!.peTTM || reportData.valuationStats!.peForward || 15));
+                                                            const eps = currentPrice > 0 ? currentPrice / currentPE : 0;
+
+                                                            // Calculate implied price lines
+                                                            const impliedLow = eps * parseFloat(String(reportData.valuationStats!.peHistoricalLow || 10));
+                                                            const impliedMean = eps * parseFloat(String(reportData.valuationStats!.peHistoricalMean || 15));
+                                                            const impliedHigh = eps * parseFloat(String(reportData.valuationStats!.peHistoricalHigh || 20));
+
+                                                            if (eps === 0) return null;
+
+                                                            return (
+                                                                <>
+                                                                    <ReferenceLine y={impliedHigh} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: `High PE: ${reportData.valuationStats!.peHistoricalHigh}x ($${impliedHigh.toFixed(0)})`, fill: '#ef4444', fontSize: 10 }} />
+                                                                    <ReferenceLine y={impliedMean} stroke="#3b82f6" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: `Mean PE: ${reportData.valuationStats!.peHistoricalMean}x ($${impliedMean.toFixed(0)})`, fill: '#3b82f6', fontSize: 10 }} />
+                                                                    <ReferenceLine y={impliedLow} stroke="#22c55e" strokeDasharray="3 3" label={{ position: 'insideBottomLeft', value: `Low PE: ${reportData.valuationStats!.peHistoricalLow}x ($${impliedLow.toFixed(0)})`, fill: '#22c55e', fontSize: 10 }} />
+                                                                </>
+                                                            );
+                                                        })()}
+
+                                                        <Line type="monotone" dataKey="price" stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 6, fill: '#f59e0b', stroke: '#fff' }} name="Stock Price" />
+                                                    </ComposedChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                            <div className="flex flex-col justify-center space-y-6">
+                                                <div className="bg-[#0a0e17] p-4 rounded-lg border border-[#ffffff0a]">
+                                                    <div className="text-sm text-gray-400 mb-1">Current P/E Context</div>
+                                                    <div className="text-3xl font-mono text-white flex items-baseline gap-2">
+                                                        {reportData.valuationStats.peTTM || reportData.valuationStats.peForward || 'N/A'}x
+                                                        {reportData.valuationStats.pePercentile && (
+                                                            <span className={`text-sm ${reportData.valuationStats.pePercentile > 80 ? 'text-rose-400' : reportData.valuationStats.pePercentile < 30 ? 'text-green-400' : 'text-blue-400'}`}>
+                                                                ({reportData.valuationStats.pePercentile > 80 ? 'Premium' : reportData.valuationStats.pePercentile < 30 ? 'Discount' : 'Fair'})
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {reportData.valuationStats.peHistoricalLow && reportData.valuationStats.peHistoricalHigh && (
+                                                    <div>
+                                                        <div className="flex justify-between text-xs mb-1">
+                                                            <span className="text-gray-400 font-bold">{reportData.valuationStats.peHistoricalLow}x (Low)</span>
+                                                            <span className="text-gray-400 font-bold">{reportData.valuationStats.peHistoricalHigh}x (High)</span>
+                                                        </div>
+                                                        <div className="relative w-full h-3 bg-gray-800 rounded-full overflow-hidden mb-2">
+                                                            <div
+                                                                className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-500 via-blue-500 to-rose-500"
+                                                                style={{ width: `${reportData.valuationStats.pePercentile || 50}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <div className="text-xs text-gray-500 italic text-center">
+                                                            5-Year P/E Range Percentile
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </section>
+                                )}
 
                                 {/* Valuation */}
                                 <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a] mb-8">
@@ -672,12 +806,116 @@ export default function EquityResearchReport() {
                                         </>
                                     )}
 
-                                    {reportData.valuation.split('\n\n').map((para, i) => (
-                                        <p key={i} className="text-gray-400 text-[15px] leading-relaxed italic border-l-2 border-emerald-500/30 pl-4 py-1 mb-4 last:mb-0">
+                                    {(aiReport?.valuation || '') === '' && isGeneratingAI && (
+                                        <div className="flex items-center gap-2 text-emerald-400 text-sm italic mt-4">
+                                            <Loader2 className="w-4 h-4 animate-spin" /> Assessing comparative multiples...
+                                        </div>
+                                    )}
+                                    {aiReport?.valuation?.split('\n\n').map((para: string, i: number) => (
+                                        <p key={i} className="text-gray-400 text-[15px] leading-relaxed italic border-l-2 border-emerald-500/30 pl-4 py-1 mb-4 mt-4 last:mb-0">
                                             {para}
                                         </p>
                                     ))}
                                 </section>
+
+                                {/* Price Target Scenarios (Bull, Base, Bear) */}
+                                {(aiReport?.priceTargets || isGeneratingAI) && (
+                                    <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a] mb-8">
+                                        <h3 className="text-xl font-bold text-teal-300 mb-6 pb-2 border-b border-teal-500/20 flex items-center gap-2">
+                                            <TrendingUp className="w-5 h-5 text-teal-400" /> Price Target Scenarios (12M)
+                                        </h3>
+
+                                        {!aiReport?.priceTargets && isGeneratingAI && (
+                                            <div className="flex items-center gap-2 text-teal-400 text-sm italic mb-4">
+                                                <Loader2 className="w-4 h-4 animate-spin" /> Modeling bull, base, and bear scenarios...
+                                            </div>
+                                        )}
+
+                                        {aiReport?.priceTargets && (
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="bg-[#0a0e17] rounded-lg p-4 border border-green-500/20 relative overflow-hidden group">
+                                                    <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
+                                                    <div className="text-sm font-bold text-green-400 mb-1 flex items-center justify-between">
+                                                        BULL CASE
+                                                        {parseFloat((reportData.currentPrice || '').replace(/[^0-9.-]+/g, "")) < (aiReport.priceTargets.bull?.price || 0) && (
+                                                            <span className="text-xs bg-green-500/10 text-green-300 px-2 rounded">
+                                                                +{(((aiReport.priceTargets.bull?.price || 0) / parseFloat((reportData.currentPrice || '').replace(/[^0-9.-]+/g, "")) - 1) * 100).toFixed(1)}%
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-3xl font-mono text-white mb-3">${aiReport.priceTargets.bull?.price}</div>
+                                                    <div className="text-xs text-gray-400 leading-relaxed border-t border-[#ffffff10] pt-3">{aiReport.priceTargets.bull?.rationale}</div>
+                                                </div>
+
+                                                <div className="bg-[#0a0e17] rounded-lg p-4 border border-blue-500/20 relative overflow-hidden group">
+                                                    <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
+                                                    <div className="text-sm font-bold text-blue-400 mb-1 flex items-center justify-between">
+                                                        BASE CASE
+                                                        {parseFloat((reportData.currentPrice || '').replace(/[^0-9.-]+/g, "")) < (aiReport.priceTargets.base?.price || 0) && (
+                                                            <span className="text-xs bg-blue-500/10 text-blue-300 px-2 rounded">
+                                                                +{(((aiReport.priceTargets.base?.price || 0) / parseFloat((reportData.currentPrice || '').replace(/[^0-9.-]+/g, "")) - 1) * 100).toFixed(1)}%
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-3xl font-mono text-white mb-3">${aiReport.priceTargets.base?.price}</div>
+                                                    <div className="text-xs text-gray-400 leading-relaxed border-t border-[#ffffff10] pt-3">{aiReport.priceTargets.base?.rationale}</div>
+                                                </div>
+
+                                                <div className="bg-[#0a0e17] rounded-lg p-4 border border-rose-500/20 relative overflow-hidden group">
+                                                    <div className="absolute top-0 right-0 w-16 h-16 bg-rose-500/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
+                                                    <div className="text-sm font-bold text-rose-400 mb-1 flex items-center justify-between">
+                                                        BEAR CASE
+                                                        {parseFloat((reportData.currentPrice || '').replace(/[^0-9.-]+/g, "")) > (aiReport.priceTargets.bear?.price || Infinity) && (
+                                                            <span className="text-xs bg-rose-500/10 text-rose-300 px-2 rounded">
+                                                                {(((aiReport.priceTargets.bear?.price || 0) / parseFloat((reportData.currentPrice || '').replace(/[^0-9.-]+/g, "")) - 1) * 100).toFixed(1)}%
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-3xl font-mono text-white mb-3">${aiReport.priceTargets.bear?.price}</div>
+                                                    <div className="text-xs text-gray-400 leading-relaxed border-t border-[#ffffff10] pt-3">{aiReport.priceTargets.bear?.rationale}</div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </section>
+                                )}
+
+                                {/* Revenue Segment Breakdown */}
+                                {(aiReport?.segmentBreakdown || isGeneratingAI) && (
+                                    <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a] mb-8">
+                                        <h3 className="text-xl font-bold text-purple-300 mb-6 pb-2 border-b border-purple-500/20 flex items-center gap-2">
+                                            <PieChart className="w-5 h-5 text-purple-400" /> Revenue Segment Breakdown
+                                        </h3>
+
+                                        {(!aiReport?.segmentBreakdown || aiReport.segmentBreakdown.length === 0) && isGeneratingAI && (
+                                            <div className="flex items-center gap-2 text-purple-400 text-sm italic mb-4">
+                                                <Loader2 className="w-4 h-4 animate-spin" /> Analyzing business segments...
+                                            </div>
+                                        )}
+
+                                        {aiReport?.segmentBreakdown && aiReport.segmentBreakdown.length > 0 && (
+                                            <div className="space-y-4">
+                                                {aiReport.segmentBreakdown.map((seg, idx) => {
+                                                    if (!seg || !seg.name || seg.percentage === undefined) return null;
+                                                    return (
+                                                        <div key={idx} className="bg-[#0a0e17] rounded-lg p-4 border border-[#ffffff0a]">
+                                                            <div className="flex justify-between items-end mb-2">
+                                                                <div className="font-bold text-gray-200">{seg.name}</div>
+                                                                <div className="font-mono text-purple-400">{seg.percentage}%</div>
+                                                            </div>
+                                                            {/* Custom CSS Progress Bar */}
+                                                            <div className="w-full bg-gray-800 rounded-full h-1.5 mb-3 overflow-hidden">
+                                                                <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 h-1.5 rounded-full transition-all duration-1000" style={{ width: `${seg.percentage}%` }}></div>
+                                                            </div>
+                                                            <div className="text-xs text-gray-400 italic">
+                                                                "{seg.insight}"
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </section>
+                                )}
 
                                 {/* Peer Comparison */}
                                 {reportData.peerComparison && reportData.peerComparison.length > 0 && (
@@ -722,13 +960,21 @@ export default function EquityResearchReport() {
                                         <h3 className="text-lg font-bold text-green-400 mb-4 flex items-center gap-2">
                                             Near-Term Catalysts
                                         </h3>
+                                        {(aiReport?.catalysts || []).length === 0 && isGeneratingAI && (
+                                            <div className="text-green-400 text-sm italic flex items-center gap-2">
+                                                <Loader2 className="w-4 h-4 animate-spin" /> Forecasting catalysts...
+                                            </div>
+                                        )}
                                         <ul className="space-y-3">
-                                            {reportData.catalysts.map((cat, i) => (
-                                                <li key={i} className="flex gap-3 text-[14px] text-gray-300">
-                                                    <span className="text-green-500 mt-1">•</span>
-                                                    <span className="leading-snug">{cat}</span>
-                                                </li>
-                                            ))}
+                                            {(aiReport?.catalysts || []).map((cat: string | undefined, i: number) => {
+                                                if (!cat) return null;
+                                                return (
+                                                    <li key={i} className="flex gap-3 text-[14px] text-gray-300">
+                                                        <span className="text-green-500 mt-1">•</span>
+                                                        <span className="leading-snug">{cat}</span>
+                                                    </li>
+                                                );
+                                            })}
                                         </ul>
                                     </section>
 
@@ -737,8 +983,14 @@ export default function EquityResearchReport() {
                                         <h3 className="text-lg font-bold text-rose-400 mb-4 flex items-center gap-2">
                                             Downside Risks
                                         </h3>
+                                        {(aiReport?.risks || []).length === 0 && isGeneratingAI && (
+                                            <div className="text-rose-400 text-sm italic flex items-center gap-2">
+                                                <Loader2 className="w-4 h-4 animate-spin" /> Analyzing downside risks...
+                                            </div>
+                                        )}
                                         <ul className="space-y-3">
-                                            {reportData.risks.map((risk, i) => {
+                                            {(aiReport?.risks || []).map((risk: string | undefined, i: number) => {
+                                                if (!risk) return null;
                                                 const [boldPart, ...rest] = risk.split('**');
                                                 if (rest.length > 0) {
                                                     return (
