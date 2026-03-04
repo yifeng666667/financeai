@@ -57,9 +57,25 @@ export default function EarthBackground() {
     }, []);
 
     return (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none z-0">
-            {/* The Globe Canvas Container - reduced opacity slightly for a more elusive, premium atmospheric blend */}
-            <div className="relative w-full max-w-[1200px] aspect-square flex items-center justify-center mix-blend-screen opacity-80 pb-20">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none z-0 bg-[#02050e]">
+            {/* Deep Space Starfield Background */}
+            <div
+                className="absolute inset-0 z-0 opacity-40 mix-blend-screen"
+                style={{
+                    backgroundImage: 'radial-gradient(1px 1px at 15px 15px, #ffffff 100%, transparent), radial-gradient(1px 1px at 50px 30px, rgba(255,255,255,0.8) 100%, transparent), radial-gradient(2px 2px at 90px 80px, rgba(255,255,255,0.5) 100%, transparent), radial-gradient(1px 1px at 130px 120px, rgba(255,255,255,0.9) 100%, transparent)',
+                    backgroundRepeat: 'repeat',
+                    backgroundSize: '150px 150px, 200px 200px, 250px 250px, 300px 300px'
+                }}
+            />
+
+            {/* Huge Atmospheric Back-Glow (The "Aura") */}
+            <div className="absolute z-10 w-[800px] h-[800px] bg-blue-500/20 rounded-full blur-[100px] mix-blend-screen translate-y-[10%]" />
+            <div className="absolute z-10 w-[500px] h-[500px] bg-cyan-400/20 rounded-full blur-[80px] mix-blend-screen translate-y-[10%]" />
+            {/* The Globe Canvas Container */}
+            <div className="relative w-full max-w-[1200px] aspect-square flex items-center justify-center mix-blend-screen opacity-90 pb-20 z-20">
+                {/* Intense Edge Rim Light / Horizon Glow (Overlayting the Globe) */}
+                <div className="absolute inset-0 rounded-full shadow-[inset_0_-40px_100px_rgba(59,130,246,0.5),inset_0__20px_40px_rgba(34,211,238,0.3)] pointer-events-none z-30 scale-[0.83]" />
+
                 <canvas
                     ref={canvasRef}
                     className="w-full h-full object-contain"
@@ -67,6 +83,8 @@ export default function EarthBackground() {
                 />
             </div>
 
+            {/* Dark vignette to focus the center and blend borders */}
+            <div className="absolute inset-0 z-40 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_40%,#0a0e17_90%)] opacity-100" />
             {/* Premium dark vignette around the edges to blend seamlessly into the #0a0e17 background */}
             <div className="absolute inset-0 z-10 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,#0a0e17_85%)] opacity-100" />
 
