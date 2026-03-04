@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 
 const TradingChart = dynamic(() => import('../components/TradingChart'), { ssr: false });
+const EarthBackground = dynamic(() => import('../components/EarthBackground'), { ssr: false });
 import RiskSparkline from '../components/RiskSparkline';
 import CorrelationHeatmap from '../components/CorrelationHeatmap';
 import VaRDistribution from '../components/VaRDistribution';
@@ -797,8 +798,9 @@ export default function DashboardV3() {
 
         {viewMode === 'sectors' ? (
           <div className="flex flex-col w-full h-full relative z-0">
+            <EarthBackground />
             {/* Global Indices Ticker */}
-            <div className="w-full bg-[#0a0e17] border-b border-[#ffffff0a] py-2 overflow-hidden flex whitespace-nowrap sticky top-0 z-20 shrink-0 shadow-lg">
+            <div className="w-full bg-[#0a0e17]/60 backdrop-blur-md border-b border-[#ffffff0a] py-2 overflow-hidden flex whitespace-nowrap sticky top-0 z-20 shrink-0 shadow-lg">
               <div className="animate-ticker flex gap-12 px-6">
                 {[...GLOBAL_INDICES, ...GLOBAL_INDICES, ...GLOBAL_INDICES].map((idx, i) => (
                   <div key={i} className="flex items-center gap-3 shrink-0">
