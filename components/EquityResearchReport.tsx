@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Loader2, Sparkles, FileText, ChevronRight, CheckCircle2, TrendingUp, AlertTriangle, Briefcase, Zap } from 'lucide-react';
+import { Search, Loader2, Sparkles, FileText, ChevronRight, CheckCircle2, TrendingUp, AlertTriangle, Briefcase, Zap, Activity, ShieldCheck, PieChart, BarChart3, Users, LineChart as LineChartIcon } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 
 interface Company {
     ticker: string;
@@ -102,6 +103,12 @@ interface ReportData {
         netIncome: string;
         netMargin: string;
     }>;
+    ratios?: {
+        profitability: Array<{ label: string; value: string; status: 'pos' | 'neu' | 'neg' }>;
+        solvency: Array<{ label: string; value: string; status: 'pos' | 'neu' | 'neg' }>;
+        efficiency: Array<{ label: string; value: string; status: 'pos' | 'neu' | 'neg' }>;
+        growth: Array<{ label: string; value: string; status: 'pos' | 'neu' | 'neg' }>;
+    };
     valuationStats?: {
         pe: string;
         peTTM: string;
@@ -111,6 +118,8 @@ interface ReportData {
         dcfBase: number;
         waccBase: number;
     };
+    historicalTrends?: Array<{ year: string; grossMargin: number; netMargin: number; roe: number }>;
+    peerComparison?: Array<{ ticker: string; isTarget?: boolean; pe: string; pb: string; netMargin: string }>;
 }
 
 export default function EquityResearchReport() {
@@ -317,9 +326,11 @@ export default function EquityResearchReport() {
                                     <h3 className="text-xl font-bold text-indigo-300 mb-4 pb-2 border-b border-indigo-500/20 flex items-center gap-2">
                                         <TrendingUp className="w-5 h-5" /> Executive Summary
                                     </h3>
-                                    <p className="text-gray-300 leading-relaxed text-[15px]">
-                                        {reportData.executiveSummary}
-                                    </p>
+                                    {reportData.executiveSummary.split('\n\n').map((para, i) => (
+                                        <p key={i} className="text-gray-300 leading-relaxed text-[15px] mb-4 last:mb-0">
+                                            {para}
+                                        </p>
+                                    ))}
                                 </section>
 
                                 {/* Investment Thesis */}
@@ -405,8 +416,109 @@ export default function EquityResearchReport() {
                                     </section>
                                 )}
 
+                                {/* Key Financial Ratios Analysis */}
+                                {reportData.ratios && (
+                                    <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a] mb-8">
+                                        <h3 className="text-xl font-bold text-blue-300 mb-6 pb-2 border-b border-blue-500/20 flex items-center gap-2">
+                                            <BarChart3 className="w-5 h-5 text-blue-400" /> Key Financial Ratios Analysis
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                            {/* Profitability */}
+                                            <div className="bg-[#ffffff05] p-5 rounded-xl border border-[#ffffff0a] hover:border-blue-500/30 transition-colors">
+                                                <div className="flex items-center gap-2 mb-4 text-blue-400">
+                                                    <Activity className="w-4 h-4" />
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Profitability</span>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {reportData.ratios.profitability.map((r, i) => (
+                                                        <div key={i} className="flex justify-between items-center">
+                                                            <span className="text-gray-400 text-xs">{r.label}</span>
+                                                            <span className={`text-xs font-mono font-bold ${r.status === 'pos' ? 'text-emerald-400' : 'text-white'}`}>{r.value}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Solvency */}
+                                            <div className="bg-[#ffffff05] p-5 rounded-xl border border-[#ffffff0a] hover:border-emerald-500/30 transition-colors">
+                                                <div className="flex items-center gap-2 mb-4 text-emerald-400">
+                                                    <ShieldCheck className="w-4 h-4" />
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Solvency</span>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {reportData.ratios.solvency.map((r, i) => (
+                                                        <div key={i} className="flex justify-between items-center">
+                                                            <span className="text-gray-400 text-xs">{r.label}</span>
+                                                            <span className={`text-xs font-mono font-bold ${r.status === 'pos' ? 'text-emerald-400' : 'text-white'}`}>{r.value}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Efficiency */}
+                                            <div className="bg-[#ffffff05] p-5 rounded-xl border border-[#ffffff0a] hover:border-orange-500/30 transition-colors">
+                                                <div className="flex items-center gap-2 mb-4 text-orange-400">
+                                                    <PieChart className="w-4 h-4" />
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-orange-400">Efficiency</span>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {reportData.ratios.efficiency.map((r, i) => (
+                                                        <div key={i} className="flex justify-between items-center">
+                                                            <span className="text-gray-400 text-xs">{r.label}</span>
+                                                            <span className={`text-xs font-mono font-bold ${r.status === 'pos' ? 'text-emerald-400' : 'text-white'}`}>{r.value}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Growth */}
+                                            <div className="bg-[#ffffff05] p-5 rounded-xl border border-[#ffffff0a] hover:border-purple-500/30 transition-colors">
+                                                <div className="flex items-center gap-2 mb-4 text-purple-400">
+                                                    <TrendingUp className="w-4 h-4" />
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-purple-400">Growth</span>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {reportData.ratios.growth.map((r, i) => (
+                                                        <div key={i} className="flex justify-between items-center">
+                                                            <span className="text-gray-400 text-xs">{r.label}</span>
+                                                            <span className={`text-xs font-mono font-bold ${r.status === 'pos' ? 'text-emerald-400' : 'text-white'}`}>{r.value}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+                                )}
+
+                                {/* Historical Trends */}
+                                {reportData.historicalTrends && reportData.historicalTrends.length > 0 && (
+                                    <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a] mb-8">
+                                        <h3 className="text-xl font-bold text-blue-300 mb-6 pb-2 border-b border-blue-500/20 flex items-center gap-2">
+                                            <LineChartIcon className="w-5 h-5 text-blue-400" /> Historical Margin Trends
+                                        </h3>
+                                        <div className="h-64 w-full">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <LineChart data={reportData.historicalTrends} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                                    <XAxis dataKey="year" stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                                                    <YAxis stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 12 }} unit="%" />
+                                                    <RechartsTooltip
+                                                        contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '8px' }}
+                                                        itemStyle={{ fontSize: '13px', fontWeight: 'bold' }}
+                                                        labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
+                                                    />
+                                                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                                                    <Line type="monotone" dataKey="grossMargin" name="Gross Margin" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                                                    <Line type="monotone" dataKey="netMargin" name="Net Margin" stroke="#a855f7" strokeWidth={3} dot={{ r: 4, fill: '#a855f7', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                                                    <Line type="monotone" dataKey="roe" name="ROE" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </section>
+                                )}
+
                                 {/* Valuation */}
-                                <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a]">
+                                <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a] mb-8">
                                     <h3 className="text-xl font-bold text-emerald-300 mb-4 pb-2 border-b border-emerald-500/20">Valuation & Methodology</h3>
 
                                     {reportData.valuationStats && (
@@ -464,10 +576,48 @@ export default function EquityResearchReport() {
                                         </div>
                                     )}
 
-                                    <p className="text-gray-400 text-[15px] leading-relaxed italic border-l-2 border-emerald-500/30 pl-4 py-1">
-                                        {reportData.valuation}
-                                    </p>
+                                    {reportData.valuation.split('\n\n').map((para, i) => (
+                                        <p key={i} className="text-gray-400 text-[15px] leading-relaxed italic border-l-2 border-emerald-500/30 pl-4 py-1 mb-4 last:mb-0">
+                                            {para}
+                                        </p>
+                                    ))}
                                 </section>
+
+                                {/* Peer Comparison */}
+                                {reportData.peerComparison && reportData.peerComparison.length > 0 && (
+                                    <section className="bg-gradient-to-br from-[#ffffff05] to-transparent p-6 rounded-xl border border-[#ffffff0a] mb-8">
+                                        <h3 className="text-xl font-bold text-orange-300 mb-6 pb-2 border-b border-orange-500/20 flex items-center gap-2">
+                                            <Users className="w-5 h-5 text-orange-400" /> Peer Valuation Comparison
+                                        </h3>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className="border-b border-[#ffffff10]">
+                                                        <th className="p-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Ticker</th>
+                                                        <th className="p-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Forward P/E</th>
+                                                        <th className="p-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">P/B Ratio</th>
+                                                        <th className="p-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Net Margin</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {reportData.peerComparison.map((peer, idx) => (
+                                                        <tr key={idx} className={`border-b border-[#ffffff05] hover:bg-[#ffffff05] transition-colors ${peer.isTarget ? 'bg-[#ffffff03]' : ''}`}>
+                                                            <td className="p-3">
+                                                                <span className={`font-bold font-mono px-2 py-1 rounded bg-[#ffffff0a] border border-[#ffffff1a] ${peer.isTarget ? 'text-orange-400 border-orange-500/30 bg-orange-500/10' : 'text-gray-300'}`}>
+                                                                    {peer.ticker}
+                                                                </span>
+                                                                {peer.isTarget && <span className="ml-2 text-xs text-orange-400/80 font-medium">(Target)</span>}
+                                                            </td>
+                                                            <td className="p-3 text-right font-mono text-gray-300">{peer.pe}x</td>
+                                                            <td className="p-3 text-right font-mono text-gray-300">{peer.pb}x</td>
+                                                            <td className="p-3 text-right font-mono text-emerald-400">{peer.netMargin}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </section>
+                                )}
 
                                 {/* Catalysts & Risks (2 Col Grid) */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

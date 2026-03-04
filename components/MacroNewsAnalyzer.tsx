@@ -12,8 +12,10 @@ import {
     TrendingDown,
     Activity,
     Zap,
-    Loader2
+    Loader2,
+    Plus
 } from 'lucide-react';
+import { usePortfolio } from '../contexts/PortfolioContext';
 
 interface AnalysisResult {
     systemicInterpretation: {
@@ -36,9 +38,23 @@ interface AnalysisResult {
 }
 
 export default function MacroNewsAnalyzer({ onStockClick }: { onStockClick?: (ticker: string) => void }) {
+    const { addHolding } = usePortfolio();
     const [newsInput, setNewsInput] = useState('');
+    const [isAdding, setIsAdding] = useState<string | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [result, setResult] = useState<AnalysisResult | null>(null);
+
+    const handleAddHolding = async (e: React.MouseEvent, ticker: string) => {
+        e.stopPropagation();
+        setIsAdding(ticker);
+        try {
+            await addHolding(ticker, "1");
+        } catch (error) {
+            console.error('Failed to add holding:', error);
+        } finally {
+            setIsAdding(null);
+        }
+    };
 
     const handleAnalyze = async () => {
         if (!newsInput.trim()) return;
@@ -50,7 +66,7 @@ export default function MacroNewsAnalyzer({ onStockClick }: { onStockClick?: (ti
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: 'User Input News', content: newsInput })
+                body: JSON.stringify({ title: 'User Input News', content: String(newsInput) })
             });
 
             if (!response.ok) throw new Error('Analysis failed');
@@ -253,12 +269,27 @@ export default function MacroNewsAnalyzer({ onStockClick }: { onStockClick?: (ti
                                             >
                                                 <div className="flex items-center justify-between mb-3">
                                                     <span className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">{stock.ticker}</span>
-                                                    <span className={`text-xs px-2.5 py-1 rounded font-bold uppercase ${stock.rating === 'Buy' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                        stock.rating === 'Sell' ? 'bg-rose-500/20 text-rose-400' :
-                                                            'bg-slate-700 text-slate-300'
-                                                        }`}>
-                                                        {stock.rating}
-                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={(e) => handleAddHolding(e, stock.ticker)}
+                                                            disabled={isAdding === stock.ticker}
+                                                            className="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20 transition-all flex items-center gap-1.5"
+                                                            title="Add to Portfolio"
+                                                        >
+                                                            {isAdding === stock.ticker ? (
+                                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                            ) : (
+                                                                <Plus className="w-4 h-4" />
+                                                            )}
+                                                            <span className="text-xs font-bold">Add</span>
+                                                        </button>
+                                                        <span className={`text-xs px-2.5 py-1 rounded font-bold uppercase ${stock.rating === 'Buy' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                            stock.rating === 'Sell' ? 'bg-rose-500/20 text-rose-400' :
+                                                                'bg-slate-700 text-slate-300'
+                                                            }`}>
+                                                            {stock.rating}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                                 <p className="text-sm text-slate-400 leading-snug">{stock.reason}</p>
                                             </div>

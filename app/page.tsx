@@ -1274,7 +1274,7 @@ export default function DashboardV3() {
                               <div className="flex items-center gap-4">
                                 <div
                                   className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-white text-lg shadow-lg border border-white/10"
-                                  style={{ backgroundColor: stock.color }}
+                                  style={{ backgroundColor: stock.color || '#3b82f6' }}
                                 >
                                   {stock.ticker.charAt(0)}
                                 </div>
@@ -1371,7 +1371,7 @@ export default function DashboardV3() {
                           const totalWeight = portfolioHoldings.reduce((sum, h) => sum + (h.weight || 0), 0);
                           const weightedReturn = totalWeight > 0
                             ? portfolioHoldings.reduce((sum, h) => sum + ((h.change || 0) * (h.weight || 0) / totalWeight), 0)
-                            : portfolioHoldings.reduce((sum, h) => sum + (h.change || 0), 0) / portfolioHoldings.length;
+                            : 0;
                           const isPositive = weightedReturn >= 0;
                           return (
                             <div className={`text-xs font-bold mt-1 ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -1824,7 +1824,7 @@ export default function DashboardV3() {
             </div>
           </div>
         )}
-          </main>
+      </main>
     </div>
   );
 }

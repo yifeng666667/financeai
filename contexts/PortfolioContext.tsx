@@ -20,6 +20,7 @@ interface PortfolioContextType {
     removeHolding: (ticker: string) => Promise<void>;
     updateWeight: (ticker: string, weight: number) => Promise<void>;
     applyModelPortfolio: (holdings: PortfolioHolding[]) => Promise<void>;
+    refreshPrices: () => Promise<void>;
 }
 
 const PortfolioContext = createContext<PortfolioContextType>({
@@ -29,6 +30,7 @@ const PortfolioContext = createContext<PortfolioContextType>({
     removeHolding: async () => { },
     updateWeight: async () => { },
     applyModelPortfolio: async () => { },
+    refreshPrices: async () => { },
 });
 
 export const usePortfolio = () => useContext(PortfolioContext);
@@ -37,6 +39,35 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
     const { user } = useAuth();
     const [portfolioHoldings, setPortfolioHoldings] = useState<PortfolioHolding[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const refreshPrices = async () => {
+        if (portfolioHoldings.length === 0) return;
+
+        try {
+            const tickers = portfolioHoldings.map(h => h.ticker).join(',');
+            const res = await fetch(`/api/prices?tickers=${tickers}`);
+            const updatedPrices = await res.json();
+
+            if (Array.isArray(updatedPrices)) {
+                setPortfolioHoldings(prev => {
+                    const newHoldings = prev.map(holding => {
+                        const update = updatedPrices.find(p => p.ticker === holding.ticker);
+                        if (update && update.price) {
+                            return {
+                                ...holding,
+                                price: update.price,
+                                change: update.change || holding.change
+                            };
+                        }
+                        return holding;
+                    });
+                    return newHoldings;
+                });
+            }
+        } catch (error) {
+            console.error("Error refreshing portfolio prices:", error);
+        }
+    };
 
     useEffect(() => {
         if (!user) {
@@ -55,9 +86,6 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
             return;
         }
 
-        // Force-refresh the auth token so Firestore recognizes the credential
-        // before we attach the onSnapshot listener (avoids a race condition
-        // on first login where the token hasn't propagated yet).
         let unsubscribe: () => void = () => { };
 
         user.getIdToken(true).then(() => {
@@ -67,7 +95,6 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
                 snapshot.forEach((doc) => {
                     holdings.push(doc.data() as PortfolioHolding);
                 });
-                // Sort by weight descending
                 holdings.sort((a, b) => b.weight - a.weight);
                 setPortfolioHoldings(holdings);
                 setLoading(false);
@@ -83,7 +110,24 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
         return () => unsubscribe();
     }, [user]);
 
-    // Save to local storage whenever holdings change if not logged in
+    // Initial price refresh on load
+    useEffect(() => {
+        if (portfolioHoldings.length > 0 && !loading) {
+            const timer = setTimeout(() => {
+                refreshPrices();
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [loading]);
+
+    // Periodically refresh prices every 60 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            refreshPrices();
+        }, 60000);
+        return () => clearInterval(interval);
+    }, [portfolioHoldings.length]);
+
     useEffect(() => {
         if (!user && !loading) {
             localStorage.setItem('financeai_portfolio', JSON.stringify(portfolioHoldings));
@@ -93,11 +137,26 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
     const addHolding = async (ticker: string, name: string, price?: number) => {
         if (portfolioHoldings.some((h) => h.ticker === ticker)) return;
 
+        let currentPrice = price || 150.00;
+        let currentChange = 0.5;
+
+        // Try to fetch real-time price first
+        try {
+            const res = await fetch(`/api/prices?tickers=${ticker}`);
+            const data = await res.json();
+            if (data && data[0] && !data[0].error) {
+                currentPrice = data[0].price || currentPrice;
+                currentChange = data[0].change || currentChange;
+            }
+        } catch (e) {
+            console.error("Error fetching initial price for holding:", e);
+        }
+
         const newHolding: PortfolioHolding = {
             ticker,
             name,
-            price: price || 150.00, // Use dynamic price
-            change: 0.5,
+            price: currentPrice,
+            change: currentChange,
             weight: 0,
             color: `hsl(${Math.random() * 360}, 70%, 60%)`
         };
@@ -143,22 +202,21 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
             return;
         }
 
-        // Clear existing portfolio first
         for (const holding of portfolioHoldings) {
             const holdingRef = doc(db, 'users', user.uid, 'portfolio', holding.ticker);
             await deleteDoc(holdingRef);
         }
 
-        // Add new holdings
         for (const holding of holdings) {
             const holdingRef = doc(db, 'users', user.uid, 'portfolio', holding.ticker);
-            await setDoc(holdingRef, holding);
+            await setDoc(holdingRef, { ...holding, weight: holding.weight }); // Ensure structure
         }
     };
 
     return (
-        <PortfolioContext.Provider value={{ portfolioHoldings, loading, addHolding, removeHolding, updateWeight, applyModelPortfolio }}>
+        <PortfolioContext.Provider value={{ portfolioHoldings, loading, addHolding, removeHolding, updateWeight, applyModelPortfolio, refreshPrices }}>
             {children}
         </PortfolioContext.Provider>
     );
 };
+
