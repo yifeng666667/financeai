@@ -650,6 +650,20 @@ export default function DashboardV3() {
     ? portfolioHoldings.reduce((acc, h) => acc + (getMockBeta(h.ticker) * (h.weight / totalWeight)), 0)
     : 1.0;
 
+  // Dynamic Sharpe Ratio Calculation based on CAPM
+  const riskFreeRate = 4.2;
+  const marketRiskPremium = 5.5;
+  const expectedReturn = riskFreeRate + portfolioBeta * marketRiskPremium;
+
+  // Base volatility based on Beta, reduced by diversification
+  let portfolioVol = portfolioBeta * 15.0;
+  const diversificationDiscount = Math.min((portfolioHoldings.length / 12) * 0.25, 0.25); // Max 25% vol reduction
+  portfolioVol = portfolioVol * (1 - diversificationDiscount);
+
+  const sharpeRatio = portfolioVol > 0 ? (expectedReturn - riskFreeRate) / portfolioVol : 0;
+  const efficiencyPotential = portfolioHoldings.length === 0 ? '—' : (sharpeRatio > 0.45 ? 'High' : sharpeRatio > 0.35 ? 'Medium' : 'Low');
+  const efficiencyColor = efficiencyPotential === 'High' ? 'text-emerald-400' : efficiencyPotential === 'Medium' ? 'text-blue-400' : 'text-orange-400';
+
   const aiInsightText = dominantWeight > 50
     ? `Based on your current allocation, your portfolio has a high concentration in **${dominantSector} (${dominantWeight}% absolute weight)**. While this can drive returns, it increases specific sector risk.`
     : portfolioHoldings.length === 0
@@ -1389,12 +1403,14 @@ export default function DashboardV3() {
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-sm border-b border-white/5 pb-3">
-                          <span className="text-gray-400 font-black uppercase tracking-tighter text-[10px]">Projected Risk Score</span>
-                          <span className="text-orange-400 font-mono font-bold text-xs uppercase">Medium (6.4)</span>
+                          <span className="text-gray-400 font-black uppercase tracking-tighter text-[10px]">Proj. Sharpe Ratio</span>
+                          <span className={`${portfolioHoldings.length > 0 ? (sharpeRatio > 0.45 ? 'text-emerald-400' : sharpeRatio > 0.35 ? 'text-blue-400' : 'text-orange-400') : 'text-gray-500'} font-mono font-bold text-xs uppercase`}>
+                            {portfolioHoldings.length > 0 ? sharpeRatio.toFixed(2) : '—'}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center text-sm border-b border-white/5 pb-3">
-                          <span className="text-gray-400 font-black uppercase tracking-tighter text-[10px]">Alpha Potential</span>
-                          <span className="text-blue-400 font-mono font-bold text-xs uppercase">High</span>
+                          <span className="text-gray-400 font-black uppercase tracking-tighter text-[10px]">Efficiency Potential</span>
+                          <span className={`${efficiencyColor} font-mono font-bold text-xs uppercase`}>{efficiencyPotential}</span>
                         </div>
                       </div>
                     </div>
