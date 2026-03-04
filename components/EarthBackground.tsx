@@ -25,20 +25,20 @@ export default function EarthBackground() {
                 mapBrightness: 6, // Refined brightness
                 // Deep carbon / obsidian base
                 baseColor: [0.03, 0.03, 0.03],
-                // Luxurious Gold / Amber markers for cities
-                markerColor: [1.0, 0.75, 0.2],
+                // Luxurious Gold / Amber markers for cities - made extremely bright
+                markerColor: [1.0, 0.9, 0.4],
                 // Subtle warm bronze / gold atmospheric glow
                 glowColor: [0.3, 0.2, 0.05],
                 markers: [
-                    // Major financial hubs with slightly varied sizes for organic feel
-                    { location: [40.7128, -74.0060], size: 0.08 }, // NY
-                    { location: [51.5074, -0.1278], size: 0.07 }, // London
-                    { location: [35.6762, 139.6503], size: 0.09 }, // Tokyo
-                    { location: [22.3193, 114.1694], size: 0.07 }, // Hong Kong
-                    { location: [1.3521, 103.8198], size: 0.06 }, // Singapore
-                    { location: [31.2304, 121.4737], size: 0.08 }, // Shanghai
-                    { location: [47.3769, 8.5417], size: 0.05 }, // Zurich
-                    { location: [48.8566, 2.3522], size: 0.05 }, // Paris
+                    // Major financial hubs made significantly larger to shine
+                    { location: [40.7128, -74.0060], size: 0.15 }, // NY
+                    { location: [51.5074, -0.1278], size: 0.12 }, // London
+                    { location: [35.6762, 139.6503], size: 0.16 }, // Tokyo
+                    { location: [22.3193, 114.1694], size: 0.11 }, // Hong Kong
+                    { location: [1.3521, 103.8198], size: 0.10 }, // Singapore
+                    { location: [31.2304, 121.4737], size: 0.14 }, // Shanghai
+                    { location: [47.3769, 8.5417], size: 0.09 }, // Zurich
+                    { location: [48.8566, 2.3522], size: 0.09 }, // Paris
                 ],
                 onRender: (state) => {
                     state.phi = phi;
@@ -68,17 +68,17 @@ export default function EarthBackground() {
                 }}
             />
 
-            {/* Huge Atmospheric Back-Glow (The "Aura") */}
-            <div className="absolute z-10 w-[800px] h-[800px] bg-blue-500/20 rounded-full blur-[100px] mix-blend-screen translate-y-[10%]" />
-            <div className="absolute z-10 w-[500px] h-[500px] bg-cyan-400/20 rounded-full blur-[80px] mix-blend-screen translate-y-[10%]" />
+            {/* Tighter, Intense Atmospheric Back-Glow (The "Aura") */}
+            <div className="absolute z-10 w-[700px] h-[700px] rounded-full mix-blend-screen translate-y-[5%] bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.5)_0%,rgba(34,211,238,0.2)_50%,transparent_70%)] animate-pulse" style={{ animationDuration: '4s' }} />
+
             {/* The Globe Canvas Container */}
-            <div className="relative w-full max-w-[1200px] aspect-square flex items-center justify-center mix-blend-screen opacity-90 pb-20 z-20">
-                {/* Intense Edge Rim Light / Horizon Glow (Overlayting the Globe) */}
-                <div className="absolute inset-0 rounded-full shadow-[inset_0_-40px_100px_rgba(59,130,246,0.5),inset_0__20px_40px_rgba(34,211,238,0.3)] pointer-events-none z-30 scale-[0.83]" />
+            <div className="relative w-full max-w-[1200px] aspect-square flex items-center justify-center mix-blend-screen opacity-100 pb-20 z-20">
+                {/* Intense Edge Rim Light / Horizon Glow - Tighter and brighter */}
+                <div className="absolute inset-0 rounded-full shadow-[0_0_80px_rgba(59,130,246,0.3),inset_0_-20px_60px_rgba(59,130,246,0.8),inset_0__10px_20px_rgba(255,255,255,0.5)] pointer-events-none z-30 scale-[0.85]" />
 
                 <canvas
                     ref={canvasRef}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain filter contrast-125 saturate-150"
                     style={{ width: "100%", height: "100%", aspectRatio: "1/1" }}
                 />
             </div>
