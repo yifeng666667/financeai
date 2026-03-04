@@ -19,7 +19,8 @@ import {
   Users,
   Banknote,
   TrendingUp,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 
 const TradingChart = dynamic(() => import('../components/TradingChart'), { ssr: false });
@@ -28,6 +29,8 @@ import CorrelationHeatmap from '../components/CorrelationHeatmap';
 import VaRDistribution from '../components/VaRDistribution';
 import CompanyRadarScorecard from '../components/CompanyRadarScorecard';
 import MacroNewsHub from '../components/MacroNewsHub';
+import MacroNewsAnalyzer from '../components/MacroNewsAnalyzer';
+import EquityResearchReport from '../components/EquityResearchReport';
 
 // Mock Sector Data with Industry details
 const SECTOR_DATA = [
@@ -217,6 +220,16 @@ const VAR_SCENARIOS = [
     recommendation: 'Hedge high-beta technology exposures with inverse ETFs or treasury bonds to lower the tail-risk from current levels.'
   },
   {
+    id: '1999',
+    description: '1-Week Value at Risk Analysis (99% Confidence)',
+    currentVaR: '2.40%',
+    expectedShortfall: '5.80%',
+    stressScenario: '1999 DOT-COM BUBBLE',
+    estimatedLoss: '-18.4%',
+    riskSummary: 'Hyper-valuation of growth assets during the late 90s created a fragile equilibrium. The portfolios current exposure to high-P/E software stocks mirrors the concentration risk seen before the historic "Mean Reversion" period.',
+    recommendation: 'Implement strict stop-loss orders and consider rotating a portion of capital into value-oriented sectors with strong free cash flow yields.'
+  },
+  {
     id: '2008',
     description: '1-Day Value at Risk Analysis (99% Confidence)',
     currentVaR: '2.10%',
@@ -227,6 +240,16 @@ const VAR_SCENARIOS = [
     recommendation: 'Increase allocation to short-duration sovereign debt and gold to provide uncorrelated liquidity buffers during severe credit contractions.'
   },
   {
+    id: '2011',
+    description: '1-Day Value at Risk Analysis (95% Confidence)',
+    currentVaR: '1.85%',
+    expectedShortfall: '3.90%',
+    stressScenario: '2011 DEBT CRISIS',
+    estimatedLoss: '-12.8%',
+    riskSummary: 'Sovereign credit downgrades and fiscal stalemates trigger immediate risk-off sentiment. Diversified portfolios often see correlation convergence as all liquid assets are sold to cover margin, nullifying sector hedges.',
+    recommendation: 'Maintain a higher cash position and look for defensive quality stocks with low debt-to-equity ratios that can weather credit market volatility.'
+  },
+  {
     id: '2020',
     description: '1-Week Value at Risk Analysis (95% Confidence)',
     currentVaR: '3.80%',
@@ -235,6 +258,16 @@ const VAR_SCENARIOS = [
     estimatedLoss: '-28.4%',
     riskSummary: 'An exogenous velocity shock severely impacts near-term cash flows globally. While software and cloud infrastructure show resilience, hardware supply chains connected to the portfolio could face massive disruptions.',
     recommendation: 'Rotate out of hardware-dependent semi-caps and increase weighting in pure-play SaaS businesses with bulletproof balance sheets.'
+  },
+  {
+    id: '2022',
+    description: '1-Month Value at Risk Analysis (95% Confidence)',
+    currentVaR: '2.15%',
+    expectedShortfall: '5.40%',
+    stressScenario: '2022 FED TIGHTENING',
+    estimatedLoss: '-24.8%',
+    riskSummary: 'A major regime shift from "cheap money" to aggressive rate hikes causes brutal multiple compression for high-duration assets. Inflation surprises lead to a breakdown in traditional stock-bond correlations.',
+    recommendation: 'Reduce overall portfolio duration and increase exposure to energy or commodities which often act as natural inflation hedges during tightening cycles.'
   }
 ];
 
@@ -323,7 +356,7 @@ export default function DashboardV3() {
   const { user, loading, signInWithGoogle, logout } = useAuth();
   const { portfolioHoldings, addHolding: addToPortfolio, removeHolding: removeFromPortfolio, updateWeight: updateHoldingWeight, applyModelPortfolio } = usePortfolio();
 
-  const [viewMode, setViewMode] = useState<'sectors' | 'industry' | 'stock' | 'markets' | 'portfolio'>('sectors');
+  const [viewMode, setViewMode] = useState<'sectors' | 'industry' | 'stock' | 'markets' | 'portfolio' | 'research'>('sectors');
   const [selectedSector, setSelectedSector] = useState<typeof SECTORS[0] | null>(null);
   const [activeEventCategory, setActiveEventCategory] = useState<string | null>(null);
   const [stockData, setStockData] = useState<OHLCV[]>([]);
@@ -630,10 +663,10 @@ export default function DashboardV3() {
       : `Your portfolio risk is well-balanced with a Beta of **${portfolioBeta.toFixed(2)}**. Maintain current strategic allocations.`;
 
   return (
-    <div className="flex h-screen w-screen bg-[#0a0e17] text-gray-100 overflow-hidden font-sans">
+    <div className="flex md:h-screen w-screen bg-[#0a0e17] text-gray-100 md:overflow-hidden font-sans flex-col md:flex-row">
 
-      {/* LEFT SIDEBAR (Legacy Auth & Nav retained) */}
-      <aside className="w-64 border-r border-[#ffffff0a] bg-[#0a0e17] flex flex-col hide-scrollbar shrink-0 shadow-xl z-10" style={{ backdropFilter: 'blur(20px)' }}>
+      {/* LEFT SIDEBAR — hidden on mobile, visible on md+ */}
+      <aside className="hidden md:flex w-64 border-r border-[#ffffff0a] bg-[#0a0e17] flex-col hide-scrollbar shrink-0 shadow-xl z-10" style={{ backdropFilter: 'blur(20px)' }}>
         <div className="p-6 flex items-center gap-3 font-semibold text-lg tracking-tight mb-4">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
             AI
@@ -662,6 +695,13 @@ export default function DashboardV3() {
           >
             <Briefcase size={18} />
             My Portfolio
+          </button>
+          <button
+            onClick={() => setViewMode('research')}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${viewMode === 'research' ? 'bg-[#ffffff0a] text-blue-400 font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#ffffff05]'}`}
+          >
+            <FileText size={18} />
+            Equity Research Report
           </button>
           <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-[#ffffff05] transition-colors">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
@@ -694,8 +734,52 @@ export default function DashboardV3() {
         </div>
       </aside>
 
+      {/* MOBILE BOTTOM NAV — visible only on small screens */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0e17]/95 backdrop-blur-xl border-t border-[#ffffff0a] flex items-center justify-around px-2 h-16 shadow-2xl">
+        <button
+          onClick={() => setViewMode('sectors')}
+          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all ${(viewMode === 'sectors' || viewMode === 'industry' || viewMode === 'stock') ? 'text-blue-400' : 'text-gray-500'}`}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
+          <span className="text-[9px] font-bold uppercase tracking-wider">Dashboard</span>
+        </button>
+        <button
+          onClick={() => setViewMode('markets')}
+          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all ${viewMode === 'markets' ? 'text-blue-400' : 'text-gray-500'}`}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+          <span className="text-[9px] font-bold uppercase tracking-wider">Markets</span>
+        </button>
+        <button
+          onClick={() => setViewMode('portfolio')}
+          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all ${viewMode === 'portfolio' ? 'text-blue-400' : 'text-gray-500'}`}
+        >
+          <Briefcase size={20} />
+          <span className="text-[9px] font-bold uppercase tracking-wider">Portfolio</span>
+        </button>
+        <button
+          onClick={() => setViewMode('research')}
+          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all ${viewMode === 'research' ? 'text-blue-400' : 'text-gray-500'}`}
+        >
+          <FileText size={20} />
+          <span className="text-[9px] font-bold uppercase tracking-wider">Research</span>
+        </button>
+        <button
+          onClick={() => user ? logout() : signInWithGoogle()}
+          className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-gray-500 transition-all"
+        >
+          {user ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.photoURL || ''} alt="" className="w-6 h-6 rounded-full border border-gray-700" />
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+          )}
+          <span className="text-[9px] font-bold uppercase tracking-wider">{user ? 'Account' : 'Sign In'}</span>
+        </button>
+      </nav>
+
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#0a0e17] overflow-y-auto">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#0a0e17] overflow-y-auto pb-16 md:pb-0">
 
         {viewMode === 'sectors' ? (
           <div className="flex flex-col w-full h-full relative z-0">
@@ -715,13 +799,13 @@ export default function DashboardV3() {
             </div>
 
             {/* SECTORS GRID VIEW */}
-            <div className="p-10 max-w-7xl mx-auto w-full flex flex-col items-center justify-center min-h-[calc(100vh-45px)] ambient-glow-bg z-10 shrink-0">
-              <div className="text-center mb-12 space-y-4 relative z-10">
-                <div className="inline-block px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-bold tracking-[0.2em] mb-3 uppercase shadow-[0_0_15px_rgba(59,130,246,0.3)]">Market Intelligence</div>
-                <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-gradient-primary drop-shadow-2xl">
+            <div className="p-4 md:p-10 max-w-7xl mx-auto w-full flex flex-col items-center justify-center min-h-[calc(100dvh-45px)] ambient-glow-bg z-10 shrink-0">
+              <div className="text-center mb-8 md:mb-12 space-y-3 md:space-y-4 relative z-10">
+                <div className="inline-block px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-bold tracking-[0.2em] mb-2 uppercase shadow-[0_0_15px_rgba(59,130,246,0.3)]">Market Intelligence</div>
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-gradient-primary drop-shadow-2xl">
                   Select Industry Sector
                 </h1>
-                <p className="text-gray-400 max-w-2xl mx-auto text-lg pt-2 leading-relaxed">
+                <p className="text-gray-400 max-w-2xl mx-auto text-sm md:text-lg pt-1 leading-relaxed px-4">
                   Explore predictive AI models, historical patterns, and real-time news impact customized for specific market domains.
                 </p>
               </div>
@@ -762,7 +846,7 @@ export default function DashboardV3() {
           </div>
         ) : viewMode === 'industry' && selectedSector ? (
           /* INDUSTRY DRILL-DOWN VIEW */
-          <div className="flex flex-col h-full w-full bg-[#0a0e17] overflow-y-auto">
+          <div className="flex flex-col min-h-full w-full bg-[#0a0e17] overflow-y-auto pb-16 md:pb-0">
             <header className="h-20 shrink-0 border-b border-[#ffffff0a] flex items-center px-8 bg-[#0a0e17]/80 backdrop-blur-2xl z-20 sticky top-0 shadow-2xl">
               <button
                 onClick={() => setViewMode('sectors')}
@@ -1078,20 +1162,20 @@ export default function DashboardV3() {
                         <div className="text-xs text-gray-400 font-bold uppercase tracking-widest">Stress Scenarios</div>
                       </div>
 
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
                         {VAR_SCENARIOS.map((scenario, index) => (
                           <button
                             key={scenario.id}
                             onClick={() => setActiveStressIndex(index)}
-                            className={`px-4 py-3 rounded-xl border text-left transition-all flex justify-between items-center ${activeStressIndex === index
-                              ? 'bg-red-500/10 border-red-500/30 ring-1 ring-red-500/50'
+                            className={`px-4 py-3 rounded-xl border text-left transition-all flex justify-between items-center shrink-0 ${activeStressIndex === index
+                              ? 'bg-red-500/10 border-red-500/30'
                               : 'bg-white/5 border-white/5 hover:bg-white/10'
                               }`}
                           >
-                            <div className={`text-sm font-bold ${activeStressIndex === index ? 'text-white' : 'text-gray-400'}`}>
+                            <div className={`text-xs font-bold ${activeStressIndex === index ? 'text-white' : 'text-gray-400'}`}>
                               {scenario.stressScenario}
                             </div>
-                            <div className={`text-sm font-black ${activeStressIndex === index ? 'text-red-500 shadow-sm' : 'text-gray-500'}`}>
+                            <div className={`text-[10px] font-black ${activeStressIndex === index ? 'text-red-500' : 'text-gray-500'}`}>
                               EST. LOSS: {scenario.estimatedLoss}
                             </div>
                           </button>
@@ -1122,6 +1206,12 @@ export default function DashboardV3() {
               <div className="glass-premium p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden mb-12">
                 <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-indigo-500/5 blur-[80px]"></div>
                 <MacroNewsHub />
+                <MacroNewsAnalyzer
+                  onStockClick={(t) => {
+                    setTicker(t);
+                    setViewMode('stock');
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -1335,9 +1425,13 @@ export default function DashboardV3() {
               </div>
             </div>
           </div>
+        ) : viewMode === 'research' ? (
+          <div className="h-full w-full overflow-hidden">
+            <EquityResearchReport />
+          </div>
         ) : (
           /* STOCKLENS DASHBOARD VIEW */
-          <div className="flex flex-col h-screen ambient-glow-bg">
+          <div className="flex flex-col h-screen md:h-screen ambient-glow-bg overflow-auto pb-16 md:pb-0">
             {/* Dashboard Header */}
             <header className="h-16 shrink-0 border-b border-[#ffffff0a] flex items-center px-6 justify-between bg-[#0a0e17]/60 backdrop-blur-xl z-20 sticky top-0">
               <div className="flex items-center gap-4">
@@ -1392,8 +1486,8 @@ export default function DashboardV3() {
               </div>
             </header>
 
-            {/* Top Half: Chart Area */}
-            <div className="h-[55%] shrink-0 flex flex-col border-b border-[#ffffff0a] relative bg-[#0f1420]">
+            {/* Top Half: Chart Area — fixed 280px on mobile, 55% on desktop */}
+            <div className="h-72 md:h-[55%] shrink-0 flex flex-col border-b border-[#ffffff0a] relative bg-[#0f1420]">
               {loadingData ? (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-500">Loading historical data for {ticker}...</div>
               ) : (
@@ -1401,8 +1495,8 @@ export default function DashboardV3() {
               )}
             </div>
 
-            {/* Bottom Half: StockLens Layout Splits */}
-            <div className="flex-1 flex min-h-0">
+            {/* Bottom: StockLens Layout — stacks vertically on mobile, side-by-side on desktop */}
+            <div className="flex flex-col md:flex-row flex-1 min-h-0">
               {/* Bottom Left: Events Grid & News List */}
               <div className="flex-1 right-border border-[#ffffff0a] p-4 flex flex-col bg-transparent overflow-y-auto relative z-10">
                 <div className="grid grid-cols-2 gap-3 mb-4 shrink-0">
@@ -1492,8 +1586,8 @@ export default function DashboardV3() {
                 </div>
               </div>
 
-              {/* Bottom Right: AI Forecast & Quantitative Matching */}
-              <div className="w-[450px] shrink-0 glass-premium border-l border-[#ffffff0a] p-5 overflow-y-auto relative z-10 !border-t-0 !border-r-0 !border-b-0 rounded-none">
+              {/* Bottom Right: AI Forecast & Company Analysis */}
+              <div className="w-full md:w-[450px] shrink-0 md:glass-premium md:border-l border-t md:border-t-0 border-[#ffffff0a] p-5 overflow-y-auto relative z-10 rounded-none">
                 <div className="mb-6 relative z-10 flex flex-col gap-3">
                   <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase pl-1 border-l-2 border-blue-500">Company Analysis</h3>
                   <div className="flex bg-[#00000040] border border-[#ffffff10] rounded-xl p-1 overflow-x-auto hide-scrollbar touch-pan-x w-full">
@@ -1730,7 +1824,7 @@ export default function DashboardV3() {
             </div>
           </div>
         )}
-      </main>
+          </main>
     </div>
   );
 }
