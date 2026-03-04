@@ -20,39 +20,37 @@ export default function EarthBackground() {
             dark: 1, // Deep dark mode
             diffuse: 1.2,
             mapSamples: 16000,
-            mapBrightness: 3.5, // Bright dots
-            baseColor: [0, 0, 0], // True black base
+            mapBrightness: 8, // Make dots very bright
+            baseColor: [0.05, 0.05, 0.05], // Slightly above true black so it doesn't blend out
             markerColor: [0.14, 0.83, 0.93], // Cyan markers
             glowColor: [0.039, 0.35, 0.8], // Deep blue glow
             markers: [
                 // Major financial hubs
-                { location: [40.7128, -74.0060], size: 0.05 }, // NY
-                { location: [51.5074, -0.1278], size: 0.04 }, // London
-                { location: [35.6762, 139.6503], size: 0.06 }, // Tokyo
-                { location: [22.3193, 114.1694], size: 0.05 }, // Hong Kong
-                { location: [1.3521, 103.8198], size: 0.04 }, // Singapore
-                { location: [31.2304, 121.4737], size: 0.07 }, // Shanghai
+                { location: [40.7128, -74.0060], size: 0.1 }, // NY
+                { location: [51.5074, -0.1278], size: 0.1 }, // London
+                { location: [35.6762, 139.6503], size: 0.1 }, // Tokyo
+                { location: [22.3193, 114.1694], size: 0.1 }, // Hong Kong
+                { location: [1.3521, 103.8198], size: 0.1 }, // Singapore
+                { location: [31.2304, 121.4737], size: 0.1 }, // Shanghai
             ],
             onRender: (state) => {
                 // Called on every animation frame.
                 state.phi = phi;
-                phi += 0.002; // Rotation speed
+                phi += 0.003; // Rotation speed
             },
         });
 
+        // Clean up on unmount
         return () => {
             globe.destroy();
         };
     }, []);
 
     return (
-        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden bg-[#0a0e17]">
-            {/* Radial Gradient to blend the globe into the deep black space */}
-            <div className="absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,#0a0e17_70%)] opacity-90" />
-
+        <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden" style={{ background: '#0a0e17' }}>
             {/* Subtle Starfield / Dust grid */}
             <div
-                className="absolute inset-0 z-0 opacity-20"
+                className="absolute inset-0 z-0 opacity-30"
                 style={{
                     backgroundImage: 'radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)), radial-gradient(1px 1px at 40px 70px, #ffffff, rgba(0,0,0,0)), radial-gradient(1.5px 1.5px at 90px 40px, #ffffff, rgba(0,0,0,0))',
                     backgroundRepeat: 'repeat',
@@ -61,13 +59,16 @@ export default function EarthBackground() {
             />
 
             {/* The Globe Canvas Container */}
-            <div className="relative w-full max-w-[1200px] aspect-square opacity-50 translate-y-[20%] lg:translate-y-[10%] mix-blend-screen">
+            <div className="relative w-full max-w-[1000px] aspect-square translate-y-[10%] lg:translate-y-[5%] z-10 opacity-70">
                 <canvas
                     ref={canvasRef}
                     className="w-full h-full"
-                    style={{ width: 1000, height: 1000, maxWidth: "100%", aspectRatio: "1/1" }}
+                    style={{ width: "100%", height: "100%", aspectRatio: "1/1" }}
                 />
             </div>
+
+            {/* Soft dark vignette around the edges to blend with the UI */}
+            <div className="absolute inset-0 z-20 pointer-events-none" style={{ background: 'radial-gradient(circle at center, transparent 30%, #0a0e17 100%)' }}></div>
         </div>
     );
 }
