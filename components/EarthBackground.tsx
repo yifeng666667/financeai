@@ -19,30 +19,17 @@ export default function EarthBackground() {
                 height: 1200 * 2,
                 phi: 0,
                 theta: 0.3,
-                dark: 1, // Dark mode map
-                diffuse: 1.5,
-                mapSamples: 24000, // Higher density for premium look
-                mapBrightness: 6, // Refined brightness
-                // Deep carbon / obsidian base
-                baseColor: [0.03, 0.03, 0.03],
-                // Luxurious Gold / Amber markers for cities - made extremely bright
-                markerColor: [1.0, 0.9, 0.4],
-                // Subtle warm bronze / gold atmospheric glow
-                glowColor: [0.3, 0.2, 0.05],
-                markers: [
-                    // Major financial hubs made significantly larger to shine
-                    { location: [40.7128, -74.0060], size: 0.15 }, // NY
-                    { location: [51.5074, -0.1278], size: 0.12 }, // London
-                    { location: [35.6762, 139.6503], size: 0.16 }, // Tokyo
-                    { location: [22.3193, 114.1694], size: 0.11 }, // Hong Kong
-                    { location: [1.3521, 103.8198], size: 0.10 }, // Singapore
-                    { location: [31.2304, 121.4737], size: 0.14 }, // Shanghai
-                    { location: [47.3769, 8.5417], size: 0.09 }, // Zurich
-                    { location: [48.8566, 2.3522], size: 0.09 }, // Paris
-                ],
+                dark: 1, // Base dark mode
+                diffuse: 1.0, // Soft diffuse lighting
+                mapSamples: 12000, // Dense but abstract (looks like terrain/clouds)
+                mapBrightness: 1.2, // Very subtle map, looking like a gas giant or abstract planet
+                baseColor: [0.02, 0.04, 0.1], // Deep cosmic blue base
+                markerColor: [0, 0, 0], // No city markers, it's an alien planet
+                glowColor: [0.2, 0.5, 1.0], // Stunning neon cyan/blue atmosphere glow
+                markers: [],
                 onRender: (state) => {
                     state.phi = phi;
-                    phi += 0.002; // Elegantly slow rotation
+                    phi += 0.001; // Unbelievably slow, majestic rotation
                 },
             });
         } catch (error) {
@@ -58,27 +45,58 @@ export default function EarthBackground() {
 
     return (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none z-0 bg-[#02050e]">
+            {/* Embedded styles for Comets and Custom Animations */}
+            <style>{`
+                @keyframes comet {
+                    0% { transform: translate(50vw, -50vh) rotate(45deg); opacity: 0; }
+                    5% { opacity: 1; }
+                    25% { transform: translate(-50vw, 50vh) rotate(45deg); opacity: 0; }
+                    100% { opacity: 0; }
+                }
+                .comet {
+                    position: absolute;
+                    width: 2px;
+                    height: 150px;
+                    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(120, 200, 255, 0.8) 60%, rgba(255,255,255,1) 100%);
+                    border-radius: 50%;
+                    filter: drop-shadow(0 0 10px rgba(120, 200, 255, 0.8));
+                    z-index: 10;
+                }
+                .comet-1 { top: 10%; left: 40%; animation: comet 8s infinite linear; animation-delay: 0s; }
+                .comet-2 { top: 20%; left: 80%; animation: comet 12s infinite linear; animation-delay: 4s; }
+                .comet-3 { top: 30%; left: 110%; animation: comet 10s infinite linear; animation-delay: 7s; }
+                .comet-4 { top: 0%; left: 60%; animation: comet 15s infinite linear; animation-delay: 2s; }
+                .comet-5 { top: 50%; left: 120%; animation: comet 14s infinite linear; animation-delay: 9s; }
+            `}</style>
+
+            {/* Comets Layer */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="comet comet-1" />
+                <div className="comet comet-2" />
+                <div className="comet comet-3" />
+                <div className="comet comet-4" />
+                <div className="comet comet-5" />
+            </div>
+
             {/* Deep Space Starfield Background */}
             <div
-                className="absolute inset-0 z-0 opacity-40 mix-blend-screen"
+                className="absolute inset-0 z-0 opacity-50 mix-blend-screen"
                 style={{
-                    backgroundImage: 'radial-gradient(1px 1px at 15px 15px, #ffffff 100%, transparent), radial-gradient(1px 1px at 50px 30px, rgba(255,255,255,0.8) 100%, transparent), radial-gradient(2px 2px at 90px 80px, rgba(255,255,255,0.5) 100%, transparent), radial-gradient(1px 1px at 130px 120px, rgba(255,255,255,0.9) 100%, transparent)',
+                    backgroundImage: 'radial-gradient(1.5px 1.5px at 15px 15px, #ffffff 100%, transparent), radial-gradient(1.5px 1.5px at 50px 30px, rgba(255,255,255,0.8) 100%, transparent), radial-gradient(2px 2px at 90px 80px, rgba(255,255,255,0.5) 100%, transparent), radial-gradient(1px 1px at 130px 120px, rgba(255,255,255,0.9) 100%, transparent)',
                     backgroundRepeat: 'repeat',
                     backgroundSize: '150px 150px, 200px 200px, 250px 250px, 300px 300px'
                 }}
             />
 
-            {/* Tighter, Intense Atmospheric Back-Glow (The "Aura") */}
-            <div className="absolute z-10 w-[700px] h-[700px] rounded-full mix-blend-screen translate-y-[5%] bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.5)_0%,rgba(34,211,238,0.2)_50%,transparent_70%)] animate-pulse" style={{ animationDuration: '4s' }} />
-
-            {/* The Globe Canvas Container */}
+            {/* The Cosmic Planet Canvas Container */}
             <div className="relative w-full max-w-[1200px] aspect-square flex items-center justify-center mix-blend-screen opacity-100 pb-20 z-20">
-                {/* Intense Edge Rim Light / Horizon Glow - Tighter and brighter */}
-                <div className="absolute inset-0 rounded-full shadow-[0_0_80px_rgba(59,130,246,0.3),inset_0_-20px_60px_rgba(59,130,246,0.8),inset_0__10px_20px_rgba(255,255,255,0.5)] pointer-events-none z-30 scale-[0.85]" />
+
+                {/* Intense Edge Rim Light / Horizon Glow - Slowly Pulsing */}
+                <div className="absolute inset-0 rounded-full shadow-[0_0_120px_rgba(59,130,246,0.3),inset_0_-30px_80px_rgba(59,130,246,0.8),inset_0__10px_20px_rgba(255,255,255,0.8)] pointer-events-none z-30 scale-[0.83] animate-pulse" style={{ animationDuration: '4s' }} />
 
                 <canvas
                     ref={canvasRef}
-                    className="w-full h-full object-contain filter contrast-125 saturate-150"
+                    className="w-full h-full object-contain filter saturate-110"
                     style={{ width: "100%", height: "100%", aspectRatio: "1/1" }}
                 />
             </div>
