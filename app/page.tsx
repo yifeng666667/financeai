@@ -1259,7 +1259,7 @@ export default function DashboardV3() {
                       <div className="flex flex-col gap-3 p-5 rounded-2xl bg-black/20 border border-white/5">
                         <div className="flex items-center gap-2 mb-2">
                           <Cpu size={14} className="text-blue-500" />
-                          <span className="text-xs font-black text-gray-300 uppercase tracking-widest">Simulated Portfolios (模拟仓)</span>
+                          <span className="text-xs font-black text-gray-300 uppercase tracking-widest">Simulated Portfolios</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <button onClick={() => applyModelPortfolio(AGGRESSIVE_GROWTH_PORTFOLIO)} className="px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all text-left group">
